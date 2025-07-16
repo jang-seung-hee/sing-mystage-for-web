@@ -43,7 +43,7 @@ const SidePanel: React.FC<SidePanelProps> = ({
       <div className="h-2" />
       <SearchBox onSearch={onSearch} />
       {/* 고정 높이 영역: 검색결과 */}
-      <div style={{height: 320, minHeight: 320, maxHeight: 320}} className="flex flex-col">
+      <div className="flex flex-col">
         <SearchResultBox results={results} loading={loading} error={error} onSelect={onSelect} />
       </div>
       {/* 가변 영역: 리스트 */}
