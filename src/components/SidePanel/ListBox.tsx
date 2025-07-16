@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getRecents } from '../../services/recentService';
 import { getFavorites, getFavoritesByFolder, addFavorite, removeFavorite } from '../../services/favoritesService';
 import { shareFolder } from '../../services/sharedFavoritesService';
-import { getFolders, addFolder, FolderItem, importOnlineFolder } from '../../services/foldersService';
+import { getFolders, addFolder, FolderItem, importOnlineFolder, deleteFolder } from '../../services/foldersService';
 import { searchSharedFolders, SharedFolder } from '../../services/sharedFavoritesService';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { YouTubeSearchResultItem } from '../../types/youtube';
@@ -390,6 +390,26 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
     }
   };
 
+  const handleRemoveFolder = async (folderId: string, folderName: string, isFromOnline?: boolean) => {
+    if (folderName === '기본 폴더' || isFromOnline) {
+      alert('기본 폴더와 온라인 폴더는 삭제할 수 없습니다.');
+      return;
+    }
+    if (!window.confirm(`'${folderName}' 폴더를 삭제하시겠습니까?\n폴더 내 즐겨찾기는 기본 폴더로 이동됩니다.`)) return;
+    setLoading(true);
+    try {
+      // 폴더 삭제
+      const { deleteFolder } = await import('../../services/foldersService');
+      await deleteFolder(folderId);
+      await loadFolders();
+      alert('폴더가 삭제되었습니다.');
+    } catch (error: any) {
+      alert(error.message || '폴더 삭제에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderListItem = (item: ListItem, index: number) => {
     const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
     const isFavorited = favoriteIds.has(videoId);
@@ -473,7 +493,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
   const renderFolderItem = (folder: FolderItem, index: number) => {
     const isOnlineFolder = folder.isFromOnline;
     const folderColor = isOnlineFolder ? 'neon-pink' : 'neon-cyan';
-    
+    const isDefaultFolder = folder.name === '기본 폴더';
     return (
       <button
         key={`folder-${folder.id}-${index}`}
@@ -483,16 +503,32 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
             ? `bg-${folderColor} text-black border-${folderColor}` 
             : `bg-dark-card text-${folderColor} border-dark-border hover:bg-${folderColor} hover:bg-opacity-5`}`}
       >
-        <div className="flex items-center">
+        <div className="flex items-center min-w-0">
           <Folder size={16} className={`mr-2 text-${folderColor}`} />
-          <span className="font-medium text-sm">{folder.name}</span>
+          <span className="font-medium text-sm truncate">{folder.name}</span>
           {isOnlineFolder && (
             <span className="ml-2 text-xs px-1.5 py-0.5 bg-neon-pink bg-opacity-20 text-neon-pink rounded">
               온라인
             </span>
           )}
         </div>
-        <span className="text-xs text-gray-400">{folder.count}개</span>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-3 z-10">
+          <span className="text-xs text-gray-400">{folder.count}개</span>
+          {/* 폴더 삭제 버튼 (기본 폴더/온라인 폴더 제외) */}
+          {!(isDefaultFolder || isOnlineFolder) && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                handleRemoveFolder(folder.id, folder.name, isOnlineFolder);
+              }}
+              className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-gray-500 hover:text-red-400"
+              title="폴더 삭제"
+              disabled={loading}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
       </button>
     );
   };
