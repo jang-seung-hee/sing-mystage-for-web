@@ -36,3 +36,20 @@ export interface YouTubeSearchResultItem {
 }
 
 export type YouTubeSearchResults = YouTubeSearchResultItem[];
+
+// 즐겨찾기 관련 타입
+export interface FavoriteItem {
+  id: string;
+  uid: string;
+  video: YouTubeSearchResultItem;
+  folderId?: string; // 폴더 ID (없으면 기본 폴더)
+  createdAt: number;
+}
+
+export interface FavoriteFolder {
+  id: string;
+  name: string;
+  uid: string;
+  createdAt: number;
+  updatedAt: number;
+}

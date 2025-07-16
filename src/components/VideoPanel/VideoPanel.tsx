@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import VideoArea from './VideoArea';
-import VideoControls from './VideoControls';
+// import VideoControls from './VideoControls';
 import { PlayerRef } from '../Player/Player';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 
@@ -45,36 +45,9 @@ const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, lo
 
   return (
     <section className="flex-1 flex flex-col h-full min-h-0 bg-gradient-to-br from-black via-gray-950 to-black relative overflow-hidden">
-      {/* 파티클 효과 배경 */}
-      <div className="absolute inset-0 opacity-20">
-        <div
-          className="absolute top-10 left-10 w-2 h-2 bg-neon-cyan rounded-full animate-bounce-glow"
-          style={{ animationDelay: '0s' }}
-        ></div>
-        <div
-          className="absolute top-32 right-20 w-1 h-1 bg-neon-pink rounded-full animate-bounce-glow"
-          style={{ animationDelay: '1s' }}
-        ></div>
-        <div
-          className="absolute bottom-40 left-1/4 w-1.5 h-1.5 bg-neon-yellow rounded-full animate-bounce-glow"
-          style={{ animationDelay: '2s' }}
-        ></div>
-        <div
-          className="absolute top-1/2 right-1/3 w-1 h-1 bg-neon-blue rounded-full animate-bounce-glow"
-          style={{ animationDelay: '3s' }}
-        ></div>
-        <div
-          className="absolute bottom-20 right-10 w-2 h-2 bg-neon-green rounded-full animate-bounce-glow"
-          style={{ animationDelay: '4s' }}
-        ></div>
-        <div
-          className="absolute top-20 left-1/3 w-1 h-1 bg-neon-purple rounded-full animate-bounce-glow"
-          style={{ animationDelay: '5s' }}
-        ></div>
-      </div>
-
-      {/* 그라데이션 오버레이 */}
-      <div className="absolute inset-0 bg-gradient-neon opacity-10 pointer-events-none"></div>
+      {/* 파티클/네온 효과 제거 또는 최소화 */}
+      {/* <div className="absolute inset-0 opacity-0 pointer-events-none"></div> */}
+      {/* <div className="absolute inset-0 bg-gradient-neon opacity-0 pointer-events-none"></div> */}
 
       {/* 로딩 상태 */}
       {loading && (
@@ -96,25 +69,16 @@ const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, lo
         </div>
       )}
 
-      {/* 정상 상태: 비디오 영역과 컨트롤 */}
+      {/* 정상 상태: 비디오 영역만 표시 (컨트롤 패널 제거) */}
       {!loading && !error && (
-        <>
-          <VideoArea 
-            ref={playerRef}
-            selected={selected} 
-            streamUrl={streamUrl} 
-            adFree={adFree}
-            onTimeUpdate={handleTimeUpdate}
-            onPlayStateChange={handlePlayStateChange}
-          />
-          <VideoControls 
-            currentTime={currentTime}
-            duration={duration}
-            isPlaying={isPlaying}
-            onSeek={handleSeek}
-            onPlayPause={handlePlayPause}
-          />
-        </>
+        <VideoArea 
+          ref={playerRef}
+          selected={selected} 
+          streamUrl={streamUrl} 
+          adFree={adFree}
+          onTimeUpdate={handleTimeUpdate}
+          onPlayStateChange={handlePlayStateChange}
+        />
       )}
     </section>
   );

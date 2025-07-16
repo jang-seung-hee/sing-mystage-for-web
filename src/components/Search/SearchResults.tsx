@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import Alert from '../Common/Alert';
 import { YouTubeSearchResultItem } from '../../types/youtube';
-import { Play, Music } from 'lucide-react';
+import { Play, Music, Heart } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { getFavorites, addFavorite, removeFavorite } from '../../services/favoritesService';
+import FolderSelector from '../Favorites/FolderSelector';
 
 interface SearchResultsProps {
   results: YouTubeSearchResultItem[];
@@ -12,6 +15,83 @@ interface SearchResultsProps {
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loading, error }) => {
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [folderSelectorOpen, setFolderSelectorOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeSearchResultItem | null>(null);
+  const { user } = useAuth();
+
+  // 즐겨찾기 ID 세트 로드
+  const loadFavoriteIds = useCallback(async () => {
+    if (!user) return;
+    try {
+      const favorites = await getFavorites();
+      const ids = new Set(favorites.map(item => {
+        const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+        return videoId;
+      }));
+      setFavoriteIds(ids);
+    } catch (error) {
+      console.error('즐겨찾기 ID 로딩 실패:', error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadFavoriteIds();
+    }
+  }, [user, loadFavoriteIds]);
+
+  // 찜하기 토글
+  const toggleFavorite = async (video: YouTubeSearchResultItem, e: React.MouseEvent) => {
+    e.stopPropagation(); // 부모 클릭 이벤트 차단
+    if (!user) return;
+    
+    const videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
+    const isFavorited = favoriteIds.has(videoId);
+
+    try {
+      if (isFavorited) {
+        // 즐겨찾기 제거 - 현재 즐겨찾기 목록에서 해당 항목을 찾아서 제거
+        const favorites = await getFavorites();
+        const favoriteItem = favorites.find(item => {
+          const itemVideoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+          return itemVideoId === videoId;
+        });
+        if (favoriteItem) {
+          await removeFavorite(favoriteItem.id);
+          // 로컬 상태 즉시 업데이트
+          const newFavoriteIds = new Set(favoriteIds);
+          newFavoriteIds.delete(videoId);
+          setFavoriteIds(newFavoriteIds);
+        }
+      } else {
+        // 즐겨찾기 추가 - 폴더 선택 모달 열기
+        setSelectedVideo(video);
+        setFolderSelectorOpen(true);
+      }
+    } catch (error) {
+      console.error('즐겨찾기 토글 실패:', error);
+    }
+  };
+
+  // 폴더 선택 완료 핸들러
+  const handleFolderSelect = async (folderId?: string) => {
+    if (!selectedVideo) return;
+
+    try {
+      await addFavorite(selectedVideo, folderId);
+      // 로컬 상태 즉시 업데이트
+      const videoId = typeof selectedVideo.id === 'string' ? selectedVideo.id : selectedVideo.id.videoId;
+      const newFavoriteIds = new Set(favoriteIds);
+      newFavoriteIds.add(videoId);
+      setFavoriteIds(newFavoriteIds);
+    } catch (error) {
+      console.error('즐겨찾기 추가 실패:', error);
+    } finally {
+      setSelectedVideo(null);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <Alert message={error} type="error" />;
   if (!results.length) {
@@ -30,6 +110,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
       <div className="space-y-2 max-h-64 sm:max-h-80 overflow-y-auto custom-scrollbar">
         {results.map((item, index) => {
           const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
+          const isFavorited = favoriteIds.has(videoId);
 
           return (
             <div
@@ -72,6 +153,21 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
                   </div>
                   <div className="text-sm text-gray-400 truncate">{item.snippet?.channelTitle}</div>
                 </div>
+
+                {/* 찜하기 버튼 */}
+                {user && (
+                  <button
+                    onClick={(e) => toggleFavorite(item, e)}
+                    className={`ml-2 p-1.5 rounded-full transition-all duration-300 hover:scale-110 flex-shrink-0 ${
+                      isFavorited
+                        ? 'text-neon-pink hover:text-pink-300'
+                        : 'text-gray-500 hover:text-neon-pink'
+                    }`}
+                    title={isFavorited ? '찜 제거' : '찜 추가'}
+                  >
+                    <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
+                  </button>
+                )}
               </div>
 
               {/* 하단 네온 장식선 */}
@@ -80,6 +176,19 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
           );
         })}
       </div>
+
+      {/* 폴더 선택 모달 */}
+      {selectedVideo && (
+        <FolderSelector
+          isOpen={folderSelectorOpen}
+          onClose={() => {
+            setFolderSelectorOpen(false);
+            setSelectedVideo(null);
+          }}
+          onSelect={handleFolderSelect}
+          video={selectedVideo}
+        />
+      )}
     </div>
   );
 };

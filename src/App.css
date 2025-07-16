@@ -36,3 +36,19 @@
     transform: rotate(360deg);
   }
 }
+
+.neon-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.neon-scrollbar::-webkit-scrollbar-thumb {
+  background: #ff3cf6; /* neon-pink */
+  border-radius: 8px;
+  border: 2px solid #18181b; /* bg-dark-bg */
+}
+.neon-scrollbar::-webkit-scrollbar-track {
+  background: #18181b; /* bg-dark-bg */
+}
+.neon-scrollbar {
+  scrollbar-color: #ff3cf6 #18181b; /* For Firefox */
+  scrollbar-width: thin;
+}

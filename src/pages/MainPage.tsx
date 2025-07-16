@@ -18,7 +18,7 @@ const MainPage: React.FC = () => {
 
   // 검색/선택/영상 상태 관리
   const [results, setResults] = useState<YouTubeSearchResultItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<YouTubeSearchResultItem | null>(null);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
@@ -76,7 +76,7 @@ const MainPage: React.FC = () => {
 
   // 실제 검색 기능 구현
   const handleSearch = async (query: string, type = 'video') => {
-    setLoading(true);
+    setSearchLoading(true);
     setError(null);
     setResults([]);
     
@@ -101,7 +101,7 @@ const MainPage: React.FC = () => {
     } catch (e: any) {
       setError(e.message || '검색 실패');
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   };
 
@@ -110,7 +110,10 @@ const MainPage: React.FC = () => {
     setSelected(item);
     setStreamUrl(null);
     setAdFree(false);
-    
+    // 모바일이면 사이드패널 닫기
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
     try {
       // 최근 부른 곡에 추가 (로그인 필수)
       if (user) {
@@ -118,7 +121,6 @@ const MainPage: React.FC = () => {
         // 최근 부른 곡 목록 업데이트 트리거
         setRecentUpdateTrigger(prev => prev + 1);
       }
-      
       const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
       setStreamUrl(url);
       setAdFree(true);
@@ -155,7 +157,7 @@ const MainPage: React.FC = () => {
       <Suspense fallback={<div>로딩 중...</div>}>
         <SidePanel
           results={results}
-          loading={loading}
+          loading={searchLoading}
           error={error}
           onSearch={handleSearch}
           onSelect={handleSelect}
@@ -167,7 +169,7 @@ const MainPage: React.FC = () => {
             selected={selected}
             streamUrl={streamUrl}
             adFree={adFree}
-            loading={loading}
+            loading={false}
             error={error}
           />
         </div>

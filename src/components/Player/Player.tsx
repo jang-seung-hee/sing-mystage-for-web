@@ -370,40 +370,10 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
 
   return (
     <div className="w-full h-full flex flex-col relative">
-      {/* 제목 표시 영역 */}
-      {title && (
-        <div className="mb-2 sm:mb-4 relative">
-          <div className="bg-gradient-to-r from-dark-card via-dark-bg to-dark-card p-2 sm:p-3 rounded-lg border border-dark-border">
-            <div className="text-center relative">
-              {/* 네온 글로우 배경 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-cyan opacity-10 rounded"></div>
-
-              {/* 제목 텍스트 */}
-              <div className="relative z-10">
-                <div className="text-white font-bold text-sm sm:text-lg mb-1 line-clamp-2">
-                  {title}
-                </div>
-                <div className="flex justify-center space-x-2">
-                  <div className="w-6 sm:w-8 h-0.5 bg-neon-cyan animate-pulse"></div>
-                  <div
-                    className="w-6 sm:w-8 h-0.5 bg-neon-pink animate-pulse"
-                    style={{ animationDelay: '0.3s' }}
-                  ></div>
-                  <div
-                    className="w-6 sm:w-8 h-0.5 bg-neon-yellow animate-pulse"
-                    style={{ animationDelay: '0.6s' }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 비디오 플레이어 영역 */}
       <div className="flex-1 relative rounded-lg overflow-hidden">
-        {/* 네온 테두리 효과 */}
-        <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow p-0.5 rounded-lg opacity-80 animate-pulse-glow">
+        {/* 네온 테두리 효과 최소화 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow p-0.5 rounded-lg opacity-10">
           <div className="w-full h-full bg-black rounded-lg"></div>
         </div>
 

@@ -13,25 +13,25 @@ const ControlBox: React.FC = () => {
   };
 
   return (
-    <div className="p-4 -mt-12 border-b border-dark-border flex flex-col gap-4">
+    <div className="w-full flex flex-col items-center">
       {/* 컨트롤 버튼들 */}
-      <div className="flex gap-2">
+      <div className="flex w-full gap-1">
         <button 
-          className="flex-1 bg-dark-card border border-neon-cyan text-neon-cyan py-2 px-3 rounded text-xs font-bold hover:bg-neon-cyan hover:text-black hover:shadow-neon-cyan transition-all duration-300 flex items-center justify-center gap-1"
+          className="flex-1 w-full bg-dark-card border border-neon-cyan text-neon-cyan py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-cyan hover:text-black hover:shadow-neon-cyan transition-all duration-300 flex items-center justify-center gap-0.5"
           onClick={handleKaraokeChart}
         >
-          <TrendingUp size={12} />
+          <TrendingUp size={16} />
           노래방차트
         </button>
         <button 
-          className="flex-1 bg-dark-card border border-neon-pink text-neon-pink py-2 px-3 rounded text-xs font-bold hover:bg-neon-pink hover:text-black hover:shadow-neon-pink transition-all duration-300 flex items-center justify-center gap-1"
+          className="flex-1 w-full bg-dark-card border border-neon-pink text-neon-pink py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-pink hover:text-black hover:shadow-neon-pink transition-all duration-300 flex items-center justify-center gap-0.5"
           onClick={handlePopularChart}
         >
-          <TrendingUp size={12} />
+          <TrendingUp size={16} />
           인기곡차트
         </button>
-        <button className="flex-1 bg-dark-card border border-neon-yellow text-neon-yellow py-2 px-3 rounded text-xs font-bold hover:bg-neon-yellow hover:text-black hover:shadow-neon-yellow transition-all duration-300 flex items-center justify-center gap-1">
-          <Settings size={12} />
+        <button className="flex-1 w-full bg-dark-card border border-neon-yellow text-neon-yellow py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-yellow hover:text-black hover:shadow-neon-yellow transition-all duration-300 flex items-center justify-center gap-0.5">
+          <Settings size={16} />
           환경설정
         </button>
       </div>

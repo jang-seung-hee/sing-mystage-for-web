@@ -35,10 +35,21 @@ const SidePanel: React.FC<SidePanelProps> = ({
     `}
     >
       <ProfileBox />
+      {/* 버튼 그룹을 로고 바로 아래로, 더 아래로 내리고 전체 폭을 채우도록 조정 */}
+      <div className="px-2 mt-1 mb-1 w-full">
+        <ControlBox />
+      </div>
+      {/* 버튼과 검색창 사이에 간격 */}
+      <div className="h-2" />
       <SearchBox onSearch={onSearch} />
-      <SearchResultBox results={results} loading={loading} error={error} onSelect={onSelect} />
-      <ControlBox />
-      <ListBox onSelect={onSelect} recentUpdateTrigger={recentUpdateTrigger} />
+      {/* 고정 높이 영역: 검색결과 */}
+      <div style={{height: 320, minHeight: 320, maxHeight: 320}} className="flex flex-col">
+        <SearchResultBox results={results} loading={loading} error={error} onSelect={onSelect} />
+      </div>
+      {/* 가변 영역: 리스트 */}
+      <div className="flex-1 min-h-0 flex flex-col">
+        <ListBox onSelect={onSelect} recentUpdateTrigger={recentUpdateTrigger} />
+      </div>
     </aside>
   );
 };

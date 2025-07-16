@@ -72,16 +72,7 @@ const SearchContainer: React.FC = () => {
     <div className="max-w-lg mx-auto mt-8">
       <SearchBar onSearch={handleSearch} />
       <SearchResults results={results} onSelect={handleSelect} loading={loading} error={error} />
-      {selected && (
-        <Player
-          videoId={selected.id.videoId || selected.id}
-          adFree={adFree}
-          streamUrl={streamUrl}
-          title={selected.snippet?.title}
-          loading={!streamUrl}
-          error={error || undefined}
-        />
-      )}
+      {/* Player 렌더링 부분 삭제: 검색 시 영상이 멈추지 않도록 함 */}
     </div>
   );
 };
