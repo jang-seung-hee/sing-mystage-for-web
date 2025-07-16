@@ -30,7 +30,9 @@ const ControlBox: React.FC = () => {
           <TrendingUp size={16} />
           인기곡차트
         </button>
-        <button className="flex-1 w-full bg-dark-card border border-neon-yellow text-neon-yellow py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-yellow hover:text-black hover:shadow-neon-yellow transition-all duration-300 flex items-center justify-center gap-0.5">
+        <button className="flex-1 w-full bg-dark-card border border-neon-yellow text-neon-yellow py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-yellow hover:text-black hover:shadow-neon-yellow transition-all duration-300 flex items-center justify-center gap-0.5"
+          onClick={() => alert('준비중인 기능입니다')}
+        >
           <Settings size={16} />
           환경설정
         </button>

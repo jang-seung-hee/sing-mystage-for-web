@@ -19,6 +19,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     onSearch(query, type);
   };
 
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedType = e.target.value;
+    if (selectedType === 'video') {
+      alert('준비중인 기능입니다');
+      setType('all');
+    } else {
+      setType(selectedType);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2 mb-4">
       {/* 첫 번째 줄: 검색 입력창 + 드롭다운 */}
@@ -42,7 +52,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         {/* 검색 타입 선택 드롭다운 */}
         <select
           value={type}
-          onChange={(e) => setType(e.target.value)}
+          onChange={handleTypeChange}
           className="bg-dark-bg border border-dark-border text-white p-2 rounded-lg focus:border-neon-pink focus:shadow-glow-md outline-none transition-all duration-300 cursor-pointer min-w-[90px]"
         >
           {SEARCH_TYPES.map((opt) => (
