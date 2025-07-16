@@ -9,13 +9,13 @@ const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const getStreamUrlFunction = httpsCallable(functions, 'getStreamUrl');
 const karaokeSearchFunction = httpsCallable(functions, 'karaokeSearch');
 
-export async function searchYouTube(query: string): Promise<YouTubeSearchResults> {
+export async function searchYouTube(query: string, maxResults: number = 50): Promise<YouTubeSearchResults> {
   const res = await axios.get(`${YOUTUBE_API_BASE}/search`, {
     params: {
       part: 'snippet',
       q: query,
       key: process.env.REACT_APP_YOUTUBE_API_KEY,
-      maxResults: 10,
+      maxResults,
       type: 'video',
     },
   });
@@ -26,7 +26,7 @@ export async function searchYouTube(query: string): Promise<YouTubeSearchResults
  * 노래방 전용 검색 함수 (yt-search 기반)
  * YouTube 공식 API로 접근하기 어려운 TJ노래방 등의 영상도 검색 가능
  */
-export async function searchKaraoke(query: string, maxResults = 10): Promise<YouTubeSearchResults> {
+export async function searchKaraoke(query: string, maxResults = 50): Promise<YouTubeSearchResults> {
   try {
     // Firebase Functions 호출
     const result = await karaokeSearchFunction({ query, maxResults });

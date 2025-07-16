@@ -391,8 +391,8 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
   };
 
   const handleRemoveFolder = async (folderId: string, folderName: string, isFromOnline?: boolean) => {
-    if (folderName === '기본 폴더' || isFromOnline) {
-      alert('기본 폴더와 온라인 폴더는 삭제할 수 없습니다.');
+    if (folderName === '기본 폴더') {
+      alert('기본 폴더는 삭제할 수 없습니다.');
       return;
     }
     if (!window.confirm(`'${folderName}' 폴더를 삭제하시겠습니까?\n폴더 내 즐겨찾기는 기본 폴더로 이동됩니다.`)) return;
@@ -514,8 +514,8 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-3 z-10">
           <span className="text-xs text-gray-400">{folder.count}개</span>
-          {/* 폴더 삭제 버튼 (기본 폴더/온라인 폴더 제외) */}
-          {!(isDefaultFolder || isOnlineFolder) && (
+          {/* 폴더 삭제 버튼 (기본 폴더만 삭제 불가) */}
+          {!isDefaultFolder && (
             <button
               onClick={e => {
                 e.stopPropagation();

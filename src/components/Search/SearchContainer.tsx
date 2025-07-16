@@ -14,6 +14,10 @@ const SearchContainer: React.FC = () => {
   const [adFree, setAdFree] = useState(false);
 
   const handleSearch = async (query: string, type: string) => {
+    if (type === 'video') {
+      alert('준비중인 기능입니다');
+      return;
+    }
     setLoading(true);
     setError(null);
     setResults([]);
@@ -42,7 +46,7 @@ const SearchContainer: React.FC = () => {
             searchQuery = `${query.trim()} ${typeKeyword}`;
           }
         }
-        items = await searchYouTube(searchQuery);
+        items = await searchYouTube(searchQuery, 50);
       }
       
       setResults(items);
