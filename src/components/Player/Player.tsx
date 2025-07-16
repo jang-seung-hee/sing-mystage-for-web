@@ -199,16 +199,16 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
         intervalRef.current = null;
       }
     };
-  }, [adFree, onTimeUpdate, streamUrl, videoId]); // videoId도 의존성 추가
+  }, [adFree, onTimeUpdate, streamUrl, videoId, onPlayStateChange]); // videoId와 onPlayStateChange도 의존성 추가
 
-  // adFree 비디오의 이벤트 리스너 강화
+  // adFree 비디오의 이벤트 리스너 강화 및 자동 재생
   useEffect(() => {
     const video = videoRef.current;
     if (adFree && video && streamUrl) {
       // 비디오 로드 시도
       video.load();
       
-      // 초기 시간 설정 시도 (다중 이벤트로)
+      // 초기 시간 설정 및 자동 재생 시도 (다중 이벤트로)
       const initializeTime = () => {
         if (video.duration && !isNaN(video.duration)) {
           if (onTimeUpdate) {
@@ -217,6 +217,11 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
           if (onPlayStateChange) {
             onPlayStateChange(!video.paused);
           }
+          
+          // 자동 재생 시도
+          video.play().catch(error => {
+            console.log('자동 재생 실패 (사용자 상호작용 필요):', error);
+          });
           
           if (process.env.NODE_ENV === 'development') {
             console.log('비디오 초기화 완료:', {
@@ -409,6 +414,8 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
               ref={videoRef}
               src={streamUrl}
               controls
+              autoPlay
+              preload="auto"
               className="video-responsive rounded-lg shadow-2xl"
               style={{
                 filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.3))',

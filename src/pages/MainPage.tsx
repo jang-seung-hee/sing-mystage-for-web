@@ -105,7 +105,7 @@ const MainPage: React.FC = () => {
     }
   };
 
-  // 선택 시 영상 재생 및 최근곡 추가
+  // 선택 시 영상 즉시 재생 및 최근곡 추가
   const handleSelect = async (item: YouTubeSearchResultItem) => {
     setSelected(item);
     setStreamUrl(null);
@@ -124,16 +124,13 @@ const MainPage: React.FC = () => {
       setAdFree(true);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);
+      // YouTube iframe으로 fallback, autoplay 파라미터 추가로 즉시 재생
       setStreamUrl(
-        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}`,
+        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
       );
       setAdFree(false);
     }
   };
-
-  const videoUrl =
-    selected &&
-    `https://www.youtube.com/embed/${typeof selected.id === 'string' ? selected.id : selected.id.videoId}`;
 
   return (
     <div className="flex h-screen bg-gradient-karaoke relative">
