@@ -1,0 +1,49 @@
+[build]
+  # 빌드 명령어
+  command = "npm run build"
+  # 배포할 디렉토리
+  publish = "build"
+  # Node.js 버전 지정
+  environment = { NODE_VERSION = "18" }
+
+[build.environment]
+  # Create React App에서 CI 환경 변수 설정
+  CI = "false"
+  # 빌드 최적화
+  GENERATE_SOURCEMAP = "false"
+
+# SPA 리다이렉트 설정
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 정적 파일 캐싱 설정
+[[headers]]
+  for = "/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+# 보안 헤더 설정
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Functions 설정 (Firebase Functions 사용으로 비활성화)
+[functions]
+  # Netlify Functions는 사용하지 않음 (Firebase Functions 사용)
+  directory = "functions_disabled" 

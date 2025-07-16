@@ -1,7 +1,7 @@
 import React, { forwardRef } from 'react';
 import Player, { PlayerRef } from '../Player/Player';
 import { YouTubeSearchResultItem } from '../../types/youtube';
-import { Play, Music } from 'lucide-react';
+import { Music } from 'lucide-react';
 
 interface VideoAreaProps {
   selected: YouTubeSearchResultItem | null;

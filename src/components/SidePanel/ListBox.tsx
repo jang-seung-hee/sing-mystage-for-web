@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Heart, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getRecents } from '../../services/recentService';
@@ -30,16 +30,16 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
   const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
   // 3일 이전 데이터 필터링 함수
-  const filterRecentItems = (items: ListItem[]): ListItem[] => {
+  const filterRecentItems = useCallback((items: ListItem[]): ListItem[] => {
     const now = Date.now();
     return items.filter(item => {
       const itemDate = item.playedAt || item.createdAt || 0;
       return (now - itemDate) <= THREE_DAYS_MS;
     });
-  };
+  }, [THREE_DAYS_MS]);
 
   // 최근 재생 목록 로드
-  const loadRecents = async () => {
+  const loadRecents = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -53,10 +53,10 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, filterRecentItems]);
 
   // 즐겨찾기 목록 로드
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -74,21 +74,21 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
       loadRecents();
       loadFavorites();
     }
-  }, [user]);
+  }, [user, loadRecents, loadFavorites]);
 
   // recentUpdateTrigger가 변경될 때마다 최근 부른 곡 새로고침
   useEffect(() => {
     if (user && recentUpdateTrigger !== undefined && recentUpdateTrigger > 0) {
       loadRecents();
     }
-  }, [recentUpdateTrigger, user]);
+  }, [recentUpdateTrigger, user, loadRecents]);
 
   // 찜 토글
   const toggleFavorite = async (video: YouTubeSearchResultItem) => {

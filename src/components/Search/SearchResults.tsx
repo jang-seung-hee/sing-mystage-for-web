@@ -35,7 +35,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
             <div
               key={`search-${videoId}-${index}`}
               className="group relative bg-dark-card border border-dark-border rounded-lg overflow-hidden hover:border-neon-cyan hover:shadow-glow-sm transition-all duration-300 cursor-pointer touch-manipulation active:scale-95"
-              onClick={() => onSelect(item)}
+              onClick={() => {
+                console.log('영상 클릭:', item.snippet?.title);
+                onSelect(item);
+              }}
               style={{ animationDelay: `${index * 0.05}s` }}
             >
               {/* 네온 호버 효과 */}

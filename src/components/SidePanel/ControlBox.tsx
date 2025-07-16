@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, Music, Settings, TrendingUp } from 'lucide-react';
+import { Settings, TrendingUp } from 'lucide-react';
 
 const ControlBox: React.FC = () => {
   // 노래방차트 버튼 클릭 핸들러
