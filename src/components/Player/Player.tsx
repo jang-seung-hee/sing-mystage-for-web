@@ -10,6 +10,7 @@ interface PlayerProps {
   error?: string | null;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  onEnded?: () => void;
 }
 
 export interface PlayerRef {
@@ -27,7 +28,8 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
   loading, 
   error, 
   onTimeUpdate,
-  onPlayStateChange 
+  onPlayStateChange,
+  onEnded
 }, ref) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -394,6 +396,7 @@ const Player = forwardRef<PlayerRef, PlayerProps>(({
               onPlay={handlePlayStateChange}
               onPause={handlePlayStateChange}
               onLoadedMetadata={handleLoadedMetadata}
+              onEnded={onEnded}
             />
           ) : (
             <iframe

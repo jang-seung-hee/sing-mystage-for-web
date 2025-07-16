@@ -8,26 +8,19 @@ import ListBox from './ListBox';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 
 interface SidePanelProps {
-  results: YouTubeSearchResultItem[];
+  results: any[];
   loading: boolean;
   error: string | null;
-  onSearch: (query: string, type: string) => void;
-  onSelect: (item: YouTubeSearchResultItem) => void;
+  onSearch: (query: string, type?: string) => void;
+  onSelect: (item: any, tab: 'recent' | 'favorites') => void;
   isOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  recentUpdateTrigger?: number; // 최근 부른 곡 업데이트 트리거
+  recentUpdateTrigger: number;
+  onPlayAll?: (favorites: any[]) => void;
+  onPlayRandom?: (favorites: any[]) => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({
-  results,
-  loading,
-  error,
-  onSearch,
-  onSelect,
-  isOpen,
-  setSidebarOpen,
-  recentUpdateTrigger,
-}) => {
+const SidePanel: React.FC<SidePanelProps> = ({ results, loading, error, onSearch, onSelect, isOpen, setSidebarOpen, recentUpdateTrigger, onPlayAll, onPlayRandom }) => {
   // 모바일 환경 감지
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -85,11 +78,11 @@ const SidePanel: React.FC<SidePanelProps> = ({
         <SearchBox onSearch={onSearch} />
         {/* 고정 높이 영역: 검색결과 */}
         <div style={{maxHeight: 197}} className="flex flex-col">
-          <SearchResultBox results={results} loading={loading} error={error} onSelect={onSelect} />
+          <SearchResultBox results={results} loading={loading} error={error} onSelect={(item) => onSelect(item, 'recent')} />
         </div>
         {/* 가변 영역: 리스트 */}
         <div className="flex-1 min-h-0 flex flex-col">
-          <ListBox onSelect={onSelect} recentUpdateTrigger={recentUpdateTrigger} />
+          <ListBox onSelect={onSelect} recentUpdateTrigger={recentUpdateTrigger} onPlayAll={onPlayAll} onPlayRandom={onPlayRandom} />
         </div>
       </aside>
     </>

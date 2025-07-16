@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Folder, X, Plus } from 'lucide-react';
+import { Folder, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getFolders, FolderItem } from '../../services/foldersService';
 import { YouTubeSearchResultItem } from '../../types/youtube';

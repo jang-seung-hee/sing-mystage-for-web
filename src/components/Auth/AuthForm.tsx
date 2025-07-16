@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 
 const AuthForm: React.FC = () => {
-  const { signup, login, user, loading, error, googleLogin, logout } = useAuth();
+  const { signup, login, user, googleLogin, logout } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

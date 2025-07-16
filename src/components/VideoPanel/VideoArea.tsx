@@ -4,21 +4,32 @@ import { YouTubeSearchResultItem } from '../../types/youtube';
 import { Music } from 'lucide-react';
 
 interface VideoAreaProps {
-  selected: YouTubeSearchResultItem | null;
-  streamUrl: string | null;
+  selected?: YouTubeSearchResultItem | null;
+  streamUrl?: string | null;
   adFree: boolean;
+  playlist?: YouTubeSearchResultItem[];
+  currentIndex?: number;
   onTimeUpdate?: (currentTime: number, duration: number) => void;
   onPlayStateChange?: (isPlaying: boolean) => void;
+  onEnded?: () => void;
 }
 
 const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(({ 
   selected, 
   streamUrl, 
   adFree, 
+  playlist,
+  currentIndex,
   onTimeUpdate,
-  onPlayStateChange 
+  onPlayStateChange,
+  onEnded
 }, ref) => {
-  if (!selected) {
+  // Determine current item: playlist > selected
+  const currentItem = playlist && typeof currentIndex === 'number' && playlist.length > 0
+    ? playlist[currentIndex] || null
+    : selected || null;
+
+  if (!currentItem) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-black via-gray-950 to-black">
         <div className="text-center space-y-6 max-w-md">
@@ -70,12 +81,13 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(({
         <div className="relative z-10 w-full h-full">
           <Player
             ref={ref}
-            videoId={typeof selected.id === 'string' ? selected.id : selected.id.videoId}
+            videoId={typeof currentItem.id === 'string' ? currentItem.id : currentItem.id.videoId}
             adFree={adFree}
-            streamUrl={streamUrl}
-            title={selected.snippet?.title || ''}
+            streamUrl={streamUrl || null}
+            title={currentItem.snippet?.title || ''}
             onTimeUpdate={onTimeUpdate}
             onPlayStateChange={onPlayStateChange}
+            onEnded={onEnded}
           />
         </div>
       </div>

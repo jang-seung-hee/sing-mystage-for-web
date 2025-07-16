@@ -19,11 +19,13 @@ interface ListItem {
 }
 
 interface ListBoxProps {
-  onSelect?: (item: YouTubeSearchResultItem) => void;
-  recentUpdateTrigger?: number; // 최근 부른 곡 업데이트 트리거
+  onSelect: (item: any, tab: 'recent' | 'favorites') => void;
+  recentUpdateTrigger: number;
+  onPlayAll?: (favorites: any[]) => void;
+  onPlayRandom?: (favorites: any[]) => void;
 }
 
-const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
+const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlayAll, onPlayRandom }) => {
   const [tab, setTab] = useState<'recent' | 'favorites'>('recent');
   const [recents, setRecents] = useState<ListItem[]>([]);
   const [favorites, setFavorites] = useState<ListItem[]>([]);
@@ -148,12 +150,13 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
     }
   }, [user, loadRecents, loadFavoriteIds, loadFolders, tab, selectedFolderId]);
 
-  // recentUpdateTrigger가 변경될 때마다 최근 부른 곡 새로고침
+  // 기존: recentUpdateTrigger가 변경될 때마다 loadRecents 실행
+  // 수정: user가 바뀌거나 최초 mount, 또는 탭이 recent로 바뀔 때만 실행
   useEffect(() => {
-    if (user && recentUpdateTrigger !== undefined && recentUpdateTrigger > 0) {
+    if (user && tab === 'recent') {
       loadRecents();
     }
-  }, [recentUpdateTrigger, user, loadRecents]);
+  }, [user, tab, loadRecents]);
 
   // 찜 토글 - 폴더 선택 기능 추가
   const toggleFavorite = async (video: YouTubeSearchResultItem) => {
@@ -449,7 +452,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
           animationDelay: `${index * 50}ms`,
           animation: 'fadeInUp 0.5s ease-out forwards'
         }}
-        onClick={() => onSelect && onSelect(item.video)}
+        onClick={() => onSelect && onSelect(item.video, tab)}
       >
         {/* 호버 그라데이션 효과 */}
         <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r ${gradientBg} rounded-lg`}></div>
@@ -513,13 +516,16 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
     const folderColor = isOnlineFolder ? 'neon-pink' : 'neon-cyan';
     const isDefaultFolder = folder.name === '기본 폴더';
     return (
-      <button
+      <div
         key={`folder-${folder.id}-${index}`}
         onClick={() => handleFolderClick(folder.id)}
         className={`flex items-center justify-between w-full py-2 px-3 rounded-lg border transition-all duration-300 cursor-pointer
           ${selectedFolderId === folder.id 
             ? `bg-${folderColor} text-black border-${folderColor}` 
             : `bg-dark-card text-${folderColor} border-dark-border hover:bg-${folderColor} hover:bg-opacity-5`}`}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleFolderClick(folder.id); }}
       >
         <div className="flex items-center min-w-0">
           <Folder size={16} className={`mr-2 text-${folderColor}`} />
@@ -547,7 +553,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
             </button>
           )}
         </div>
-      </button>
+      </div>
     );
   };
 
@@ -584,6 +590,46 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
         </div>
       </div>
       
+      {/* 1. 찜 영상 목록 루트(목록 선택 화면)에서는 전체/랜덤 재생 버튼을 제거 */}
+      {/* 2. 특정 찜 목록 상세 화면에서만 버튼 노출 */}
+      {tab === 'favorites' && selectedFolderId && (
+        <>
+          <div className="flex items-center justify-between mb-2 px-3 mt-2">
+            <button
+              onClick={handleBackToFolders}
+              className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-gray-500 hover:text-neon-pink"
+              title="뒤로가기"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <h3 className="font-bold text-lg text-white">
+              {selectedFolderId === 'default' ? '기본 찜 목록' : folders.find(f => f.id === selectedFolderId)?.name}
+            </h3>
+            <div className="w-8"></div>
+          </div>
+          {/* 버튼 그룹을 h3 바로 아래에 위치 */}
+          {favorites.length > 0 && (
+            <div className="flex gap-1 mt-1 mb-2 justify-center items-center">
+              <button
+                className="flex items-center gap-1 px-2 py-1 rounded bg-dark-card border border-neon-cyan/50 text-xs text-white hover:bg-neon-cyan/10 transition-colors"
+                onClick={() => onPlayAll && onPlayAll(favorites.map(f => f.video))}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v18l15-9L5 3z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 1v6M17 1l-4 4m4-4l4 4M7 23v-6M7 23l4-4m-4 4l-4-4" /></svg>
+                전체
+              </button>
+              <button
+                className="flex items-center gap-1 px-2 py-1 rounded bg-dark-card border border-neon-yellow/50 text-xs text-white hover:bg-neon-yellow/10 transition-colors"
+                onClick={() => onPlayRandom && onPlayRandom(favorites.map(f => f.video))}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v18l15-9L5 3z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 3h5v5M8 21H3v-5m16.07-7.07L3.93 19.07" /></svg>
+                랜덤
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
 
       {/* 폴더 선택 모달 */}
@@ -613,19 +659,6 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
                 selectedFolderId ? (
                   // 특정 찜 목록의 찜 영상들 보기
                   <>
-                    <div className="flex items-center justify-between mb-2 px-3">
-                      <button
-                        onClick={handleBackToFolders}
-                        className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-gray-500 hover:text-neon-pink"
-                        title="뒤로가기"
-                      >
-                        <ArrowLeft size={16} />
-                      </button>
-                      <h3 className="font-bold text-lg text-white">
-                        {selectedFolderId === 'default' ? '기본 찜 목록' : folders.find(f => f.id === selectedFolderId)?.name}
-                      </h3>
-                      <div className="w-8"></div>
-                    </div>
                     {favorites.map((item, index) => renderListItem(item, index))}
                     
                     {/* 온라인 공유 버튼 */}

@@ -24,6 +24,9 @@ const MainPage: React.FC = () => {
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [adFree, setAdFree] = useState(false);
   const [recentUpdateTrigger, setRecentUpdateTrigger] = useState(0); // 최근 부른 곡 업데이트 트리거
+  // 플레이리스트 및 현재 인덱스 상태 추가
+  const [playlist, setPlaylist] = useState<YouTubeSearchResultItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(-1);
 
   // 창 크기 변경 시 사이드바 상태 조정
   useEffect(() => {
@@ -106,19 +109,17 @@ const MainPage: React.FC = () => {
   };
 
   // 선택 시 영상 즉시 재생 및 최근곡 추가
-  const handleSelect = async (item: YouTubeSearchResultItem) => {
+  const handleSelect = async (item: any, tab: 'recent' | 'favorites') => {
     setSelected(item);
     setStreamUrl(null);
     setAdFree(false);
-    // 모바일이면 사이드패널 닫기
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
     try {
-      // 최근 부른 곡에 추가 (로그인 필수)
-      if (user) {
+      // 최근본 영상 탭에서만 addRecent 및 트리거
+      if (user && tab === 'recent') {
         await addRecent(item);
-        // 최근 부른 곡 목록 업데이트 트리거
         setRecentUpdateTrigger(prev => prev + 1);
       }
       const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
@@ -126,12 +127,25 @@ const MainPage: React.FC = () => {
       setAdFree(true);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);
-      // YouTube iframe으로 fallback, autoplay 파라미터 추가로 즉시 재생
       setStreamUrl(
         `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
       );
       setAdFree(false);
     }
+  };
+
+  // 전체 재생 핸들러
+  const handlePlayAll = (favorites: YouTubeSearchResultItem[]) => {
+    setPlaylist(favorites);
+    setCurrentIndex(0);
+  };
+
+  // 랜덤 재생 핸들러
+  const handlePlayRandom = (favorites: YouTubeSearchResultItem[]) => {
+    if (favorites.length === 0) return;
+    const randomIdx = Math.floor(Math.random() * favorites.length);
+    setPlaylist(favorites);
+    setCurrentIndex(randomIdx);
   };
 
   return (
@@ -160,7 +174,7 @@ const MainPage: React.FC = () => {
           loading={searchLoading}
           error={error}
           onSearch={handleSearch}
-          onSelect={handleSelect}
+          onSelect={handleSelect as (item: any, tab: 'recent' | 'favorites') => void}
           isOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           recentUpdateTrigger={recentUpdateTrigger}
@@ -172,6 +186,13 @@ const MainPage: React.FC = () => {
             adFree={adFree}
             loading={false}
             error={error}
+            playlist={playlist}
+            currentIndex={currentIndex}
+            onEnded={() => {
+              if (currentIndex < playlist.length - 1) {
+                setCurrentIndex(currentIndex + 1);
+              }
+            }}
           />
         </div>
       </Suspense>

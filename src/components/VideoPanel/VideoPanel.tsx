@@ -10,9 +10,12 @@ interface VideoPanelProps {
   adFree: boolean;
   loading: boolean;
   error: string | null;
+  playlist?: YouTubeSearchResultItem[];
+  currentIndex?: number;
+  onEnded?: () => void;
 }
 
-const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, loading, error }) => {
+const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, loading, error, playlist, currentIndex, onEnded }) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -76,6 +79,9 @@ const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, lo
           selected={selected} 
           streamUrl={streamUrl} 
           adFree={adFree}
+          playlist={playlist}
+          currentIndex={currentIndex}
+          onEnded={onEnded}
           onTimeUpdate={handleTimeUpdate}
           onPlayStateChange={handlePlayStateChange}
         />
