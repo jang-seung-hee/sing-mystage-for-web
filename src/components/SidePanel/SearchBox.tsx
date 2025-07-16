@@ -7,7 +7,7 @@ interface SearchBoxProps {
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {
   return (
-    <div className="px-1 pt-1 pb-0 border-b border-dark-border">
+    <div className="px-0.5 pt-0.5 pb-0 border-b border-dark-border">
       <SearchBar onSearch={onSearch} />
     </div>
   );

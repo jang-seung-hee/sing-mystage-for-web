@@ -107,7 +107,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
   return (
     <div className="space-y-3">
       {/* 검색 결과 리스트 */}
-      <div className="space-y-2 max-h-64 sm:max-h-80 overflow-y-auto custom-scrollbar">
+      <div className="space-y-2 max-h-[13rem] sm:max-h-[15.5rem] overflow-y-auto custom-scrollbar">
         {results.map((item, index) => {
           const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
           const isFavorited = favoriteIds.has(videoId);
@@ -125,7 +125,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
               {/* 네온 호버 효과 */}
               <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-transparent to-neon-pink opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
 
-              <div className="flex items-center p-1.5 sm:p-2 relative z-10">
+              <div className="flex items-center p-1 sm:p-1.5 relative z-10">
                 {/* 썸네일 */}
                 <div className="relative mr-1.5 sm:mr-2 flex-shrink-0">
                   <div className="w-10 h-7 sm:w-12 sm:h-9 relative rounded-lg overflow-hidden border border-dark-border group-hover:border-neon-cyan transition-colors duration-300">

@@ -558,7 +558,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
       {/* 탭 헤더 + 즐겨찾기 관리 아이콘 */}
       <div className="flex gap-0 mb-0 flex-shrink-0 items-center relative">
         <button
-          className={`py-3 px-4 rounded-t-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-b-0 ${
+          className={`py-2 px-3 rounded-t-lg font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-b-0 ${
             tab === 'recent'
               ? 'bg-neon-cyan text-black border-neon-cyan'
               : 'bg-dark-card text-neon-cyan border-dark-border hover:bg-neon-cyan hover:bg-opacity-5'
@@ -566,19 +566,19 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
           style={{ width: 'calc(50% - 10px)' }}
           onClick={() => setTab('recent')}
         >
-          <Clock size={14} />
+          <Clock size={12} />
           최근 본 영상
         </button>
         <div className="relative flex items-center" style={{ width: 'calc(50% + 10px)' }}>
           <button
-            className={`w-full py-3 px-4 rounded-t-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 border border-b-0 ${
+            className={`w-full py-2 px-3 rounded-t-lg font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 border border-b-0 ${
               tab === 'favorites'
                 ? 'bg-neon-pink text-black border-neon-pink'
                 : 'bg-dark-card text-neon-pink border-dark-border hover:bg-neon-pink hover:bg-opacity-5'
             }`}
             onClick={() => setTab('favorites')}
           >
-            <Heart size={14} />
+            <Heart size={12} />
             찜 영상 목록
           </button>
         </div>

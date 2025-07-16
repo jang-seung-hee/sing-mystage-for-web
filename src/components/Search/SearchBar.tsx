@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 mb-4">
+    <form onSubmit={handleSubmit} className="space-y-1 mb-1">
       {/* 첫 번째 줄: 검색 입력창 + 드롭다운 */}
       <div className="flex gap-2">
         {/* 검색 입력창 */}
@@ -66,7 +66,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       {/* 두 번째 줄: 검색 버튼 (전체 너비) */}
       <button
         type="submit"
-        className="w-full bg-neon-cyan text-black px-4 py-2 rounded-lg font-bold hover:shadow-neon-cyan hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-2"
+        className="w-full bg-neon-cyan text-black px-4 py-1 rounded-lg font-bold hover:shadow-neon-cyan hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-2"
       >
         <Search size={16} />
         검색
