@@ -6,15 +6,13 @@ interface SearchBarProps {
 }
 
 const SEARCH_TYPES = [
-  { value: 'video', label: '노래방' },
-  { value: 'music', label: '원곡' },
-  { value: 'cover', label: '커버곡' },
   { value: 'all', label: '일반검색' },
+  { value: 'video', label: '노래방' },
 ];
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [query, setQuery] = useState('');
-  const [type, setType] = useState('video');
+  const [type, setType] = useState('all');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

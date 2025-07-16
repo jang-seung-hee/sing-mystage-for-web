@@ -39,50 +39,46 @@ const AuthForm: React.FC = () => {
   }
 
   return (
-    <div className="max-w-xs mx-auto mt-8 p-6 bg-dark-card border border-dark-border rounded-lg shadow-neon-cyan">
-      <h2 className="text-xl font-bold mb-4 text-white text-center">
-        {isLogin ? '로그인' : '회원가입'}
-      </h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="bg-dark-bg border border-dark-border text-white p-3 rounded focus:border-neon-cyan focus:shadow-glow-sm outline-none transition-all duration-200"
-          required
-        />
-        <input
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="bg-dark-bg border border-dark-border text-white p-3 rounded focus:border-neon-cyan focus:shadow-glow-sm outline-none transition-all duration-200"
-          required
-        />
-        {error && <div className="text-red-400 text-sm text-center">{error}</div>}
+    <div className="min-h-screen flex items-center justify-center pt-32 bg-dark-bg">
+      <div className="w-full max-w-md p-6 bg-dark-card rounded-lg shadow-neon-cyan">
+        <h2 className="text-2xl font-bold text-center text-white mb-6">로그인</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="w-full px-4 py-2 rounded bg-black text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+          />
+          <input
+            type="password"
+            placeholder="비밀번호"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full px-4 py-2 rounded bg-black text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
+          />
+          <button
+            type="submit"
+            className="w-full py-2 rounded bg-neon-cyan text-black font-bold hover:bg-cyan-300 transition"
+          >
+            로그인
+          </button>
+        </form>
         <button
-          type="submit"
-          className="bg-neon-cyan text-black py-3 rounded font-bold disabled:opacity-50 hover:shadow-neon-cyan transition-all duration-200 disabled:cursor-not-allowed"
-          disabled={loading}
+          onClick={googleLogin}
+          className="w-full py-2 mt-4 rounded bg-red-600 text-white font-bold hover:bg-red-700 transition"
         >
-          {loading ? '처리 중...' : isLogin ? '로그인' : '회원가입'}
+          Google 계정으로 로그인
         </button>
-      </form>
-      <button
-        type="button"
-        className="mt-4 bg-red-600 hover:bg-red-700 text-white py-3 rounded w-full font-bold hover:shadow-glow-sm transition-all duration-200"
-        onClick={googleLogin}
-        disabled={loading}
-      >
-        {loading ? '처리 중...' : 'Google 계정으로 로그인'}
-      </button>
-      <button
-        className="mt-4 text-neon-blue hover:text-neon-cyan underline text-sm w-full transition-colors duration-200"
-        onClick={() => setIsLogin((v) => !v)}
-      >
-        {isLogin ? '회원가입으로 전환' : '로그인으로 전환'}
-      </button>
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsLogin((v) => !v)}
+            className="text-neon-cyan hover:underline text-sm"
+          >
+            회원가입으로 전환
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
