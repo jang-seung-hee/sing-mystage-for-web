@@ -5,7 +5,7 @@ import { getRecents } from '../../services/recentService';
 import { getFavorites, getFavoritesByFolder, addFavorite, removeFavorite } from '../../services/favoritesService';
 import { shareFolder } from '../../services/sharedFavoritesService';
 import { getFolders, addFolder, FolderItem, importOnlineFolder, deleteFolder } from '../../services/foldersService';
-import { searchSharedFolders, SharedFolder } from '../../services/sharedFavoritesService';
+import { searchSharedFolders, SharedFolder, deleteSharedFolder } from '../../services/sharedFavoritesService';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 
@@ -407,6 +407,24 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
       alert(error.message || '폴더 삭제에 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 온라인 공유 폴더 삭제
+  const handleRemoveSharedFolder = async (folder: SharedFolder) => {
+    if (!user) return;
+    if (!window.confirm(`'${folder.title}' 공유 폴더를 삭제하시겠습니까?`)) return;
+    setOnlineLoading(true);
+    try {
+      await deleteSharedFolder(folder.id);
+      // 삭제 후 목록 갱신
+      const results = await searchSharedFolders('', 'latest', 20);
+      setSharedFolders(results);
+      alert('공유 폴더가 삭제되었습니다.');
+    } catch (error: any) {
+      alert(error.message || '공유 폴더 삭제에 실패했습니다.');
+    } finally {
+      setOnlineLoading(false);
     }
   };
 
@@ -883,21 +901,33 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger }) => {
                         sharedFolders.map((folder) => (
                           <div
                             key={folder.id}
-                            className="p-3 bg-dark-bg rounded-lg border border-gray-600 hover:border-neon-pink transition-colors cursor-pointer"
+                            className="p-3 bg-dark-bg rounded-lg border border-gray-600 hover:border-neon-pink transition-colors cursor-pointer flex items-center justify-between gap-2"
                             onClick={() => handleOnlineFolderClick(folder)}
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-white font-medium truncate">{folder.title}</h4>
-                                <p className="text-gray-400 text-sm mt-1 line-clamp-2">{folder.description}</p>
-                                <div className="flex items-center mt-2 text-xs text-gray-500">
-                                  <span className="flex-1 text-left mx-1">작성자: {folder.authorName}</span>
-                                  <span className="flex-1 text-center mx-1">{folder.favoriteCount}개 항목</span>
-                                  <span className="flex-1 text-right mx-1">다운로드: {folder.downloadCount}회</span>
-                                </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-white font-medium truncate">{folder.title}</h4>
+                              <p className="text-gray-400 text-sm mt-1 line-clamp-2">{folder.description}</p>
+                              <div className="flex items-center mt-2 text-xs text-gray-500">
+                                <span className="flex-1 text-left mx-1">작성자: {folder.authorName}</span>
+                                <span className="flex-1 text-center mx-1">{folder.favoriteCount}개 항목</span>
+                                <span className="flex-1 text-right mx-1">다운로드: {folder.downloadCount}회</span>
                               </div>
-                              <ArrowLeft className="rotate-180 text-gray-400 flex-shrink-0" size={16} />
                             </div>
+                            {/* 내가 작성한 폴더에만 삭제 버튼 노출 */}
+                            {user && folder.authorId === user.uid && (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleRemoveSharedFolder(folder);
+                                }}
+                                className="ml-2 p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-gray-500 hover:text-red-400"
+                                title="공유 폴더 삭제"
+                                disabled={onlineLoading}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                            <ArrowLeft className="rotate-180 text-gray-400 flex-shrink-0" size={16} />
                           </div>
                         ))
                       ) : (

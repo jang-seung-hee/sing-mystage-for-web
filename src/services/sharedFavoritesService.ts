@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, increment, doc, limit } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, orderBy, updateDoc, increment, doc, limit, deleteDoc } from 'firebase/firestore';
 import { auth } from '../firebase';
 import { FavoriteItem } from '../types/youtube';
 
@@ -171,6 +171,20 @@ export async function rateSharedFolder(sharedFolderId: string, rating: number): 
     console.error('평점 추가 에러:', error);
     throw error;
   }
+}
+
+// 공유 폴더 삭제
+export async function deleteSharedFolder(folderId: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('로그인이 필요합니다');
+  // 본인 소유만 삭제 가능
+  const folderRef = doc(db, SHARED_FAVORITES_COLLECTION, folderId);
+  // 폴더 데이터 확인
+  const snapshot = await getDocs(query(collection(db, SHARED_FAVORITES_COLLECTION), where('__name__', '==', folderId)));
+  if (snapshot.empty) throw new Error('폴더를 찾을 수 없습니다');
+  const folder = snapshot.docs[0].data();
+  if (folder.authorId !== user.uid) throw new Error('본인이 작성한 폴더만 삭제할 수 있습니다');
+  await deleteDoc(folderRef);
 }
 
 // 내가 공유한 폴더 목록
