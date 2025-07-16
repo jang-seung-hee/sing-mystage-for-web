@@ -162,6 +162,7 @@ const MainPage: React.FC = () => {
           onSearch={handleSearch}
           onSelect={handleSelect}
           isOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
           recentUpdateTrigger={recentUpdateTrigger}
         />
         <div className="flex-1 flex flex-col">

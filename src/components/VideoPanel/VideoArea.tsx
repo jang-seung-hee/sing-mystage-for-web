@@ -38,7 +38,7 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(({
           <div className="space-y-3">
             <h3 className="text-xl font-bold text-white">
               <span className="bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow bg-clip-text text-transparent">
-                SingMystage for Web
+                Neon Music for Web
               </span>
             </h3>
             <p className="text-gray-400 text-sm leading-relaxed">
