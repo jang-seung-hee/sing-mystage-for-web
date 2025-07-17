@@ -2,12 +2,12 @@ import React from 'react';
 import { Loader2, Music } from 'lucide-react';
 
 const LoadingSpinner: React.FC = () => (
-  <div className="flex flex-col justify-center items-center py-8">
+  <div className="flex flex-col justify-center items-center py-16">
     {/* 네온 스피너 */}
     <div className="relative">
-      <Loader2 size={40} className="text-neon-cyan animate-spin" />
+      <Loader2 size={100} className="text-neon-cyan animate-spin" />
       <div className="absolute inset-0 flex items-center justify-center">
-        <Music size={16} className="text-neon-pink animate-pulse" />
+        <Music size={40} className="text-neon-pink animate-pulse" />
       </div>
     </div>
 
