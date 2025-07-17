@@ -1,7 +1,8 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState, useRef } from 'react';
 import Player, { PlayerRef } from '../Player/Player';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 import { Music } from 'lucide-react';
+import { Expand, Minimize } from 'lucide-react';
 
 interface VideoAreaProps {
   selected?: YouTubeSearchResultItem | null;
@@ -28,6 +29,78 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
     },
     ref,
   ) => {
+    // 훅은 항상 컴포넌트 최상단에서 호출
+    const [showFullscreenBtn, setShowFullscreenBtn] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const hideBtnTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    // 전체화면 상태 감지
+    React.useEffect(() => {
+      const handleFullscreenChange = () => {
+        const isFs = !!(
+          document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).mozFullScreenElement ||
+          (document as any).msFullscreenElement
+        );
+        setIsFullscreen(isFs);
+      };
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+      return () => {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      };
+    }, []);
+
+    // orientationchange 시 버튼 자동 표시 (항상 보이도록 수정)
+    React.useEffect(() => {
+      const handleOrientationChange = () => {
+        if (window.screen && window.screen.orientation) {
+          const isLandscape = window.screen.orientation.type.startsWith('landscape');
+          setShowFullscreenBtn(isLandscape);
+        }
+      };
+      window.addEventListener('orientationchange', handleOrientationChange);
+      // 최초 진입 시에도 상태 반영
+      handleOrientationChange();
+      return () => {
+        window.removeEventListener('orientationchange', handleOrientationChange);
+      };
+    }, []);
+
+    // 터치 시 버튼 표시 (가로 모드에서 항상 보이므로 제거)
+
+    // 전체화면 토글
+    const handleFullscreenToggle = () => {
+      const container = document.querySelector('.video-container');
+      if (!isFullscreen) {
+        if (container && (container as any).requestFullscreen) {
+          (container as any).requestFullscreen();
+        } else if (container && (container as any).webkitRequestFullscreen) {
+          (container as any).webkitRequestFullscreen();
+        } else if (container && (container as any).mozRequestFullScreen) {
+          (container as any).mozRequestFullScreen();
+        } else if (container && (container as any).msRequestFullscreen) {
+          (container as any).msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        } else if ((document as any).mozCancelFullScreen) {
+          (document as any).mozCancelFullScreen();
+        } else if ((document as any).msExitFullscreen) {
+          (document as any).msExitFullscreen();
+        }
+      }
+    };
+
     // Determine current item: playlist > selected
     const currentItem =
       playlist && typeof currentIndex === 'number' && playlist.length > 0
@@ -89,8 +162,19 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
             <div className="w-full h-full bg-dark-bg rounded-lg"></div>
           </div>
 
+          {/* 전체화면 토글 버튼 (모바일 가로, 터치 시 2초간 표시) */}
+          {showFullscreenBtn && (
+            <button
+              className="absolute top-4 right-4 z-30 bg-black/20 rounded-full p-1 border border-neon-cyan shadow-neon-cyan transition-all duration-300"
+              style={{ touchAction: 'manipulation', boxShadow: '0 0 8px #00fff7, 0 0 16px #00fff755', backdropFilter: 'blur(2px)' }}
+              onClick={handleFullscreenToggle}
+            >
+              {isFullscreen ? <Minimize size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} /> : <Expand size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} />}
+            </button>
+          )}
+
           {/* 플레이어 영역 */}
-          <div className="relative z-10 w-full h-full">
+          <div className="relative z-10 w-full h-full video-container">
             <Player
               ref={ref}
               videoId={typeof currentItem.id === 'string' ? currentItem.id : currentItem.id.videoId}

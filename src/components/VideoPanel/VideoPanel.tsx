@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import VideoArea from './VideoArea';
 // import VideoControls from './VideoControls';
 import { PlayerRef } from '../Player/Player';
@@ -29,6 +29,38 @@ const VideoPanel: React.FC<VideoPanelProps> = ({
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef<PlayerRef>(null);
+
+  // 모바일에서 가로 전체화면에서 세로로 바뀌면 전체화면 종료
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // 모바일 환경에서만 동작
+      if (window.screen && window.screen.orientation) {
+        const isPortrait = window.screen.orientation.type.startsWith('portrait');
+        // 전체화면 상태 확인
+        const isFullscreen =
+          document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).mozFullScreenElement ||
+          (document as any).msFullscreenElement;
+        if (isPortrait && isFullscreen) {
+          // 전체화면 종료
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if ((document as any).webkitExitFullscreen) {
+            (document as any).webkitExitFullscreen();
+          } else if ((document as any).mozCancelFullScreen) {
+            (document as any).mozCancelFullScreen();
+          } else if ((document as any).msExitFullscreen) {
+            (document as any).msExitFullscreen();
+          }
+        }
+      }
+    };
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
 
   // 비디오 시간 업데이트 핸들러
   const handleTimeUpdate = (time: number, totalDuration: number) => {

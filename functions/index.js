@@ -507,3 +507,85 @@ exports.karaokeSearch = onCall(
     }
   },
 );
+
+/**
+ * 사용자별 사용량 집계 기록 함수
+ * type: 'video_play', 'search', 'usage_time'
+ * Firestore에 날짜별 집계(upsert) 저장
+ */
+const functions = require('firebase-functions');
+exports.recordUsage = functions.https.onRequest(async (req, res) => {
+  try {
+    // CORS 허용
+    res.set('Access-Control-Allow-Origin', '*');
+    if (req.method === 'OPTIONS') {
+      res.set('Access-Control-Allow-Methods', 'POST');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.status(204).send('');
+      return;
+    }
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+    const { type, userId, videoId, title, date, seconds } = req.body;
+    if (!type || !userId || !date) {
+      res.status(400).send('Missing required fields');
+      return;
+    }
+    const db = admin.firestore();
+    if (type === 'video_play') {
+      if (!videoId || !title) {
+        res.status(400).send('Missing videoId or title');
+        return;
+      }
+      // 문서 ID: userId_videoId_date
+      const docId = `${userId}_${videoId}_${date}`;
+      await db.collection('user_video_plays').doc(docId).set({
+        userId,
+        videoId,
+        title,
+        date,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } else if (type === 'search') {
+      // 문서 ID: userId_date
+      const docId = `${userId}_${date}`;
+      const ref = db.collection('user_search_stats').doc(docId);
+      await db.runTransaction(async (t) => {
+        const doc = await t.get(ref);
+        const prev = doc.exists ? doc.data().search_count || 0 : 0;
+        t.set(ref, {
+          userId,
+          date,
+          search_count: prev + 1,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      });
+    } else if (type === 'usage_time') {
+      if (typeof seconds !== 'number') {
+        res.status(400).send('Missing or invalid seconds');
+        return;
+      }
+      // 문서 ID: userId_date
+      const docId = `${userId}_${date}`;
+      const ref = db.collection('user_usage_time').doc(docId);
+      await db.runTransaction(async (t) => {
+        const doc = await t.get(ref);
+        const prev = doc.exists ? doc.data().total_seconds || 0 : 0;
+        t.set(ref, {
+          userId,
+          date,
+          total_seconds: prev + seconds,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+      });
+    } else {
+      res.status(400).send('Invalid type');
+      return;
+    }
+    res.status(200).send('ok');
+  } catch (err) {
+    res.status(500).send('Server error: ' + err.message);
+  }
+});

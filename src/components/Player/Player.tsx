@@ -20,6 +20,24 @@ export interface PlayerRef {
   toggle: () => void;
 }
 
+// recordUsage API 호출 함수
+async function recordUsage({ type, userId, date, seconds }: {
+  type: 'usage_time',
+  userId: string,
+  date: string,
+  seconds: number,
+}) {
+  try {
+    await fetch('https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, userId, date, seconds }),
+    });
+  } catch (e) {
+    // 집계 실패는 무시
+  }
+}
+
 const Player = forwardRef<PlayerRef, PlayerProps>(
   (
     { videoId, adFree, streamUrl, title, loading, error, onTimeUpdate, onPlayStateChange, onEnded },
@@ -28,6 +46,12 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
     const videoRef = useRef<HTMLVideoElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // 누적 재생 시간 집계용
+    const lastSentTimeRef = useRef<number>(0);
+    const totalPlayedRef = useRef<number>(0);
+    const lastUserIdRef = useRef<string | null>(null);
+    const lastDateRef = useRef<string | null>(null);
 
     // 부모 컴포넌트에서 호출할 수 있는 메소드들 노출
     useImperativeHandle(ref, () => ({
@@ -262,8 +286,24 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
         // 유효한 시간 값인지 확인
         if (!isNaN(currentTime) && !isNaN(duration) && duration > 0) {
           // 시간 업데이트 (로그 제거로 성능 개선)
-
           onTimeUpdate(currentTime, duration);
+
+          // --- 누적 재생 시간 집계 ---
+          // userId, 날짜 정보는 localStorage에서 가져옴 (MainPage에서 저장)
+          const userId = localStorage.getItem('usage_userId');
+          const date = localStorage.getItem('usage_date');
+          if (userId && date) {
+            // 10초 단위로만 전송
+            const now = Math.floor(Date.now() / 1000);
+            if (!lastSentTimeRef.current || now - lastSentTimeRef.current >= 10) {
+              // 누적 재생 시간 계산 (10초 단위)
+              totalPlayedRef.current += 10;
+              recordUsage({ type: 'usage_time', userId, date, seconds: 10 });
+              lastSentTimeRef.current = now;
+              lastUserIdRef.current = userId;
+              lastDateRef.current = date;
+            }
+          }
         }
       }
     };

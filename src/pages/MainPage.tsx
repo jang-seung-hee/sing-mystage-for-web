@@ -77,6 +77,26 @@ const MainPage: React.FC = () => {
     }
   };
 
+  // recordUsage API 호출 함수
+  async function recordUsage({ type, userId, videoId, title, date, seconds }: {
+    type: 'video_play' | 'search' | 'usage_time',
+    userId: string,
+    videoId?: string,
+    title?: string,
+    date: string,
+    seconds?: number,
+  }) {
+    try {
+      await fetch('https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, userId, videoId, title, date, seconds }),
+      });
+    } catch (e) {
+      // 집계 실패는 무시 (용량 최적화 목적)
+    }
+  }
+
   // 실제 검색 기능 구현
   const handleSearch = async (query: string, type = 'video') => {
     setSearchLoading(true);
@@ -96,6 +116,13 @@ const MainPage: React.FC = () => {
       if (typeKeyword) {
         searchQuery = `${query.trim()} ${typeKeyword}`;
       }
+    }
+
+    // 검색 집계 호출
+    if (user?.uid) {
+      const today = new Date();
+      const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+      recordUsage({ type: 'search', userId: user.uid, date: dateStr });
     }
 
     try {
@@ -131,6 +158,18 @@ const MainPage: React.FC = () => {
         `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
       );
       setAdFree(false);
+    }
+
+    // 영상 플레이 집계 호출
+    if (user?.uid) {
+      const today = new Date();
+      const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+      const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
+      const title = item.snippet?.title || '';
+      recordUsage({ type: 'video_play', userId: user.uid, videoId, title, date: dateStr });
+      // 누적 재생 시간 집계를 위해 userId, date를 localStorage에 저장
+      localStorage.setItem('usage_userId', user.uid);
+      localStorage.setItem('usage_date', dateStr);
     }
   };
 
