@@ -64,6 +64,7 @@ const FavoritesList: React.FC<FavoritesListProps> = ({
     <div className="mt-8">
       <h2 className="font-bold mb-2">찜 목록</h2>
       {/* 전체 재생/랜덤 재생 버튼 추가 */}
+      {/* 개발 중: 전체/랜덤 버튼 숨김 처리
       <div className="flex gap-2 mb-3">
         <button
           className="px-3 py-1 rounded bg-neon-cyan text-white font-semibold shadow hover:bg-neon-pink transition-colors"
@@ -78,6 +79,7 @@ const FavoritesList: React.FC<FavoritesListProps> = ({
           랜덤 재생
         </button>
       </div>
+      */}
       {favorites.length > 0 ? (
         <ul className="divide-y border rounded shadow">
           {favorites.map((fav, index) => {

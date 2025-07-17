@@ -698,6 +698,7 @@ const ListBox: React.FC<ListBoxProps> = ({
             <div className="w-8"></div>
           </div>
           {/* 버튼 그룹을 h3 바로 아래에 위치 */}
+          {/* 개발 중: 전체/랜덤 버튼 숨김 처리
           {favorites.length > 0 && (
             <div className="flex gap-1 mt-1 mb-2 justify-center items-center">
               <button
@@ -770,6 +771,7 @@ const ListBox: React.FC<ListBoxProps> = ({
               </button>
             </div>
           )}
+          */}
         </>
       )}
 
