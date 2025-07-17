@@ -30,7 +30,6 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
     ref,
   ) => {
     // 훅은 항상 컴포넌트 최상단에서 호출
-    const [showFullscreenBtn, setShowFullscreenBtn] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const hideBtnTimeout = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -47,10 +46,10 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
           if (!container) return;
 
           if (isLandscape) {
-            if (container.requestFullscreen) {
-              container.requestFullscreen().catch(() => {});
-            }
+            // 가로모드: 전체화면 버튼은 항상 보임 (렌더링 조건에서 처리)
+            // 전체화면 자동 진입은 사용자가 버튼을 눌러야 하므로 여기선 자동 진입 X
           } else {
+            // 세로모드: 전체화면이면 무조건 종료
             if (document.fullscreenElement) {
               document.exitFullscreen().catch(() => {});
             }
@@ -78,7 +77,7 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
       const container = document.querySelector('.video-container');
       if (!isFullscreen) {
         if (container && (container as any).requestFullscreen) {
-          (container as any).requestFullscreen();
+          (container as any).requestFullscreen().catch(() => {});
         } else if (container && (container as any).webkitRequestFullscreen) {
           (container as any).webkitRequestFullscreen();
         } else if (container && (container as any).mozRequestFullScreen) {
@@ -181,16 +180,21 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
             </div>
           )}
 
-          {/* 전체화면 토글 버튼 (모바일 가로, 터치 시 2초간 표시) */}
-          {showFullscreenBtn && (
-            <button
-              className="absolute top-4 right-4 z-30 bg-black/20 rounded-full p-1 border border-neon-cyan shadow-neon-cyan transition-all duration-300"
-              style={{ touchAction: 'manipulation', boxShadow: '0 0 8px #00fff7, 0 0 16px #00fff755', backdropFilter: 'blur(2px)' }}
-              onClick={handleFullscreenToggle}
-            >
-              {isFullscreen ? <Minimize size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} /> : <Expand size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} />}
-            </button>
-          )}
+          {/* 전체화면 토글 버튼 (모바일 가로모드에서만 표시) */}
+          {(() => {
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isLandscape = isMobile && window.matchMedia('(orientation: landscape)').matches;
+            if (!isMobile || !isLandscape) return null;
+            return (
+              <button
+                className="absolute top-4 right-4 z-30 bg-black/20 rounded-full p-1 border border-neon-cyan shadow-neon-cyan transition-all duration-300"
+                style={{ touchAction: 'manipulation', boxShadow: '0 0 8px #00fff7, 0 0 16px #00fff755', backdropFilter: 'blur(2px)' }}
+                onClick={handleFullscreenToggle}
+              >
+                {isFullscreen ? <Minimize size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} /> : <Expand size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} />}
+              </button>
+            );
+          })()}
 
           {/* 플레이어 영역 */}
           <div className="relative z-10 w-full h-full video-container">

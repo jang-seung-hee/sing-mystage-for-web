@@ -190,26 +190,33 @@ const MainPage: React.FC = () => {
   return (
     <div className="flex h-screen bg-gradient-karaoke relative">
       {/* 햄버거 메뉴 버튼 */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed bottom-4 right-4 p-1.5 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95 flex items-center justify-center"
-        aria-label="메뉴 토글"
-        style={{ minWidth: 29, minHeight: 29, zIndex: 9999 }}
-      >
-        <span className={`relative flex items-center justify-center`}>
-          {sidebarOpen ? (
-            <>
-              <ChevronLeft size={17} className="drop-shadow-[0_0_6px_#00fff7] animate-glow-left" />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-l from-neon-cyan/60 to-transparent blur-md animate-glow-left" />
-            </>
-          ) : (
-            <>
-              <ChevronRight size={17} className="drop-shadow-[0_0_6px_#ff00ea] animate-glow-right" />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-neon-pink/60 to-transparent blur-md animate-glow-right" />
-            </>
-          )}
-        </span>
-      </button>
+      {(() => {
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isPortrait = isMobile && window.matchMedia('(orientation: portrait)').matches;
+        if (!isMobile || !isPortrait) return null;
+        return (
+          <button
+            onClick={toggleSidebar}
+            className="fixed bottom-4 right-4 p-1.5 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95 flex items-center justify-center"
+            aria-label="메뉴 토글"
+            style={{ minWidth: 29, minHeight: 29, zIndex: 9999 }}
+          >
+            <span className={`relative flex items-center justify-center`}>
+              {sidebarOpen ? (
+                <>
+                  <ChevronLeft size={17} className="drop-shadow-[0_0_6px_#00fff7] animate-glow-left" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-l from-neon-cyan/60 to-transparent blur-md animate-glow-left" />
+                </>
+              ) : (
+                <>
+                  <ChevronRight size={17} className="drop-shadow-[0_0_6px_#ff00ea] animate-glow-right" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-neon-pink/60 to-transparent blur-md animate-glow-right" />
+                </>
+              )}
+            </span>
+          </button>
+        );
+      })()}
 
       {/* 모바일 오버레이 */}
       {sidebarOpen && (
