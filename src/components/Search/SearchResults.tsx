@@ -109,9 +109,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
   }
 
   return (
-    <div className="space-y-3">
+    <div className="h-full flex flex-col">
       {/* 검색 결과 리스트 */}
-      <div className="space-y-2 max-h-[13rem] sm:max-h-[15.5rem] overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 p-2">
         {results.map((item, index) => {
           const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
           const isFavorited = favoriteIds.has(videoId);
