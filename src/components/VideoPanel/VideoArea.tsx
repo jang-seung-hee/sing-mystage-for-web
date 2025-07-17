@@ -173,10 +173,14 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
               : undefined
           }
         >
-          {/* 네온 테두리 컨테이너 (전체화면에서는 숨김) */}
-          {!isFullscreen && (
+          {/* 네온 테두리 컨테이너 (전체화면에서는 네온만 꺼짐, ㄱ자 배경은 짙은 회색) */}
+          {!isFullscreen ? (
             <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-cyan p-0.5 sm:p-1 rounded-lg opacity-60 animate-pulse-glow neon-reduced">
               <div className="w-full h-full bg-dark-bg rounded-lg"></div>
+            </div>
+          ) : (
+            <div className="absolute inset-0 p-0.5 sm:p-1 rounded-lg pointer-events-none">
+              <div className="w-full h-full bg-gray-900/70 opacity-40 rounded-lg"></div>
             </div>
           )}
 
