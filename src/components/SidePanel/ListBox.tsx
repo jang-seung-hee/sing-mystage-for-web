@@ -534,8 +534,8 @@ const ListBox: React.FC<ListBoxProps> = ({
           className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r ${gradientBg} rounded-lg`}
         ></div>
 
-        {/* 메인 콘텐츠 */}
-        <div className="flex-1 flex flex-col justify-center min-w-0 z-10">
+        {/* 메인 콘텐츠 - 제목 영역을 더 길게 */}
+        <div className="flex-1 flex flex-col justify-center min-w-0 z-10 pr-0">
           {/* 제목 */}
           <h4
             className={`font-medium text-sm transition-colors duration-300 truncate ${
@@ -567,33 +567,18 @@ const ListBox: React.FC<ListBoxProps> = ({
               {/* 이동(폴더+화살표) SVG */}
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h4l2 3h7a2 2 0 0 1 2 2v2"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             </button>
-          ) : (
-            // 기존 하트(찜) 아이콘: 나머지 경우
-            <button
-              onClick={e => {
-                e.stopPropagation();
-              }}
-              className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${
-                isFavorited
-                  ? 'text-neon-pink hover:text-pink-300'
-                  : 'text-gray-500 hover:text-neon-pink'
-              }`}
-              title={isFavorited ? '찜 제거' : '찜 추가'}
-            >
-              <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
-            </button>
-          )}
-          {/* 삭제 버튼 (즐겨찾기 탭에서만) */}
+          ) : null}
+          {/* 찜 목록에서 제거 (하트 아이콘으로 변경) */}
           {tab === 'favorites' && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleRemoveFavorite(item.id);
               }}
-              className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-gray-500 hover:text-red-400"
-              title="목록에서 제거"
+              className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-neon-pink hover:text-pink-300"
+              title="찜 목록에서 제거"
             >
-              <Trash2 size={14} />
+              <Heart size={14} fill="currentColor" />
             </button>
           )}
         </div>
