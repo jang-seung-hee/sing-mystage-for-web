@@ -397,7 +397,7 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
                 ref={iframeRef}
                 src={streamUrl}
                 title="YouTube Video"
-                className="w-full h-full rounded-lg shadow-2xl pointer-events-none"
+                className="w-full h-full rounded-lg shadow-2xl"
                 style={{
                   filter: 'drop-shadow(0 0 20px rgba(255, 0, 255, 0.3))',
                 }}
