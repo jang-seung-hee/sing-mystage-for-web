@@ -40,6 +40,41 @@ const MainPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 모바일 뒤로가기 버튼으로 사이드 패널 열기/닫기 제어
+  useEffect(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    let skipNextPop = false;
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (!sidebarOpen) {
+        setSidebarOpen(true);
+        skipNextPop = true;
+        // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
+        window.history.pushState(null, '', window.location.href);
+      } else if (skipNextPop) {
+        // 첫 popstate는 사이드바 오픈용이므로 무시
+        skipNextPop = false;
+      } else {
+        // 사이드바 열려있을 때는 원래대로 동작(앱 종료/이전 페이지)
+      }
+    };
+
+    if (!sidebarOpen) {
+      window.history.pushState({ sidebar: 'open' }, '');
+    }
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // 사이드바 닫힐 때 가짜 state 정리
+      if (!sidebarOpen && window.history.state && window.history.state.sidebar === 'open') {
+        window.history.back();
+      }
+    };
+  }, [sidebarOpen]);
+
   // 조건부 렌더링 처리
   // 로딩 중이면 로딩 스피너 표시
   if (authLoading) {
