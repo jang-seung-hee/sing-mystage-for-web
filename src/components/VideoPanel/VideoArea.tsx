@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useRef } from 'react';
+import React, { forwardRef, useRef, useEffect, useState } from 'react';
 import Player, { PlayerRef } from '../Player/Player';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 import { Music } from 'lucide-react';
@@ -33,47 +33,45 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
     const [showFullscreenBtn, setShowFullscreenBtn] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const hideBtnTimeout = useRef<NodeJS.Timeout | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // 전체화면 상태 감지
-    React.useEffect(() => {
-      const handleFullscreenChange = () => {
-        const isFs = !!(
-          document.fullscreenElement ||
-          (document as any).webkitFullscreenElement ||
-          (document as any).mozFullScreenElement ||
-          (document as any).msFullscreenElement
-        );
-        setIsFullscreen(isFs);
-      };
-      document.addEventListener('fullscreenchange', handleFullscreenChange);
-      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-      return () => {
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-        document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-      };
-    }, []);
+    // 전체화면 상태 감지 및 모바일 대응(useEffect 통합)
+    useEffect(() => {
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (!isMobile) return;
 
-    // orientationchange 시 버튼 자동 표시 (항상 보이도록 수정)
-    React.useEffect(() => {
       const handleOrientationChange = () => {
-        if (window.screen && window.screen.orientation) {
-          const isLandscape = window.screen.orientation.type.startsWith('landscape');
-          setShowFullscreenBtn(isLandscape);
-        }
+        setTimeout(() => {
+          const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+          const container = containerRef.current;
+          if (!container) return;
+
+          if (isLandscape) {
+            if (container.requestFullscreen) {
+              container.requestFullscreen().catch(() => {});
+            }
+          } else {
+            if (document.fullscreenElement) {
+              document.exitFullscreen().catch(() => {});
+            }
+          }
+        }, 100);
       };
+
+      const handleFullscreenChange = () => {
+        setIsFullscreen(document.fullscreenElement === containerRef.current);
+      };
+
       window.addEventListener('orientationchange', handleOrientationChange);
-      // 최초 진입 시에도 상태 반영
-      handleOrientationChange();
+      window.addEventListener('resize', handleOrientationChange);
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+
       return () => {
         window.removeEventListener('orientationchange', handleOrientationChange);
+        window.removeEventListener('resize', handleOrientationChange);
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
       };
     }, []);
-
-    // 터치 시 버튼 표시 (가로 모드에서 항상 보이므로 제거)
 
     // 전체화면 토글
     const handleFullscreenToggle = () => {
@@ -155,12 +153,33 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
     }
 
     return (
-      <div className="flex-1 flex flex-col p-3 sm:p-6 min-h-0">
-        <div className="w-full h-full relative min-h-[400px] sm:min-h-[500px]">
-          {/* 네온 테두리 컨테이너 (모바일에서 감소된 효과) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-cyan p-0.5 sm:p-1 rounded-lg opacity-60 animate-pulse-glow neon-reduced">
-            <div className="w-full h-full bg-dark-bg rounded-lg"></div>
-          </div>
+      <div
+        className={
+          isFullscreen
+            ? 'flex-1 flex flex-col min-h-0'
+            : 'flex-1 flex flex-col p-3 sm:p-6 min-h-0'
+        }
+        style={isFullscreen ? { padding: 0, margin: 0 } : undefined}
+      >
+        <div
+          ref={containerRef}
+          className={
+            isFullscreen
+              ? 'fixed top-0 left-0 z-[9999] bg-black flex items-center justify-center'
+              : 'w-full h-full relative min-h-[400px] sm:min-h-[500px]'
+          }
+          style={
+            isFullscreen
+              ? { width: '100vw', height: '100vh', minHeight: 0, padding: 0, margin: 0 }
+              : undefined
+          }
+        >
+          {/* 네온 테두리 컨테이너 (전체화면에서는 숨김) */}
+          {!isFullscreen && (
+            <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-cyan p-0.5 sm:p-1 rounded-lg opacity-60 animate-pulse-glow neon-reduced">
+              <div className="w-full h-full bg-dark-bg rounded-lg"></div>
+            </div>
+          )}
 
           {/* 전체화면 토글 버튼 (모바일 가로, 터치 시 2초간 표시) */}
           {showFullscreenBtn && (
