@@ -11,7 +11,7 @@ import {
   printTestReport,
   TEST_VIDEO_IDS,
   TestSummary,
-  getErrorMessage
+  getErrorMessage,
 } from '../utils/testUtils';
 import { searchKaraoke } from '../services/youtubeApi';
 
@@ -38,7 +38,7 @@ const TestPage: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
 
   const addLog = (message: string) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
   const clearLogs = () => {
@@ -51,11 +51,11 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('헬스체크');
-    
+
     try {
       addLog('헬스체크 테스트 시작...');
       const result = await testHealthCheck();
-      setResults(prev => ({ ...prev, healthCheck: result }));
+      setResults((prev) => ({ ...prev, healthCheck: result }));
       addLog(`헬스체크 ${result.success ? '성공' : '실패'}: ${result.responseTime}ms`);
     } catch (error) {
       addLog(`헬스체크 오류: ${getErrorMessage(error)}`);
@@ -69,11 +69,11 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('메트릭 조회');
-    
+
     try {
       addLog('메트릭 조회 테스트 시작...');
       const result = await testGetMetrics();
-      setResults(prev => ({ ...prev, metrics: result }));
+      setResults((prev) => ({ ...prev, metrics: result }));
       addLog(`메트릭 조회 ${result.success ? '성공' : '실패'}: ${result.responseTime}ms`);
     } catch (error) {
       addLog(`메트릭 조회 오류: ${getErrorMessage(error)}`);
@@ -87,7 +87,7 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('단일 비디오 테스트');
-    
+
     try {
       const testVideoId = TEST_VIDEO_IDS.music[0]; // Rick Roll
       addLog(`단일 비디오 테스트 시작: ${testVideoId}`);
@@ -106,11 +106,11 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('음악 배치 테스트');
-    
+
     try {
       addLog('음악 비디오 배치 테스트 시작...');
       const result = await testMultipleVideos(TEST_VIDEO_IDS.music);
-      setResults(prev => ({ ...prev, musicTest: result }));
+      setResults((prev) => ({ ...prev, musicTest: result }));
       addLog(`음악 배치 테스트 완료: ${result.successRate.toFixed(1)}% 성공률`);
     } catch (error) {
       addLog(`음악 배치 테스트 오류: ${getErrorMessage(error)}`);
@@ -124,11 +124,11 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('동시 요청 테스트');
-    
+
     try {
       addLog('3개 동시 요청 테스트 시작...');
       const result = await testConcurrentRequests(TEST_VIDEO_IDS.music, 3);
-      setResults(prev => ({ ...prev, concurrentTest: result }));
+      setResults((prev) => ({ ...prev, concurrentTest: result }));
       addLog(`동시 요청 테스트 완료: ${result.successRate.toFixed(1)}% 성공률`);
     } catch (error) {
       addLog(`동시 요청 테스트 오류: ${getErrorMessage(error)}`);
@@ -142,11 +142,11 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('에러 시나리오 테스트');
-    
+
     try {
       addLog('에러 시나리오 테스트 시작...');
       const result = await testErrorScenarios();
-      setResults(prev => ({ ...prev, errorTest: result }));
+      setResults((prev) => ({ ...prev, errorTest: result }));
       addLog(`에러 시나리오 테스트 완료: ${result.failureCount}개 에러 처리 확인`);
     } catch (error) {
       addLog(`에러 시나리오 테스트 오류: ${getErrorMessage(error)}`);
@@ -160,7 +160,7 @@ const TestPage: React.FC = () => {
     if (!user) return;
     setIsRunning(true);
     setCurrentTest('포괄적인 통합 테스트');
-    
+
     try {
       addLog('포괄적인 통합 테스트 시작... (5-10분 소요)');
       const testResults = await runComprehensiveTest();
@@ -179,29 +179,29 @@ const TestPage: React.FC = () => {
     setIsRunning(true);
     setCurrentTest('노래방 검색 테스트');
     addLog('=== 노래방 검색 테스트 시작 ===');
-    
+
     try {
       // 테스트할 검색어들
       const testQueries = ['사랑했지만 노래방', 'IU 좋은날 노래방', 'BTS 노래방'];
-      
+
       for (const query of testQueries) {
         addLog(`검색 중: "${query}"`);
         const startTime = Date.now();
-        
+
         const results = await searchKaraoke(query, 5);
         const responseTime = Date.now() - startTime;
-        
+
         if (results && results.length > 0) {
           addLog(`✅ "${query}" 검색 성공: ${results.length}개 결과, ${responseTime}ms`);
           addLog(`  첫 번째 결과: ${results[0].snippet.title}`);
         } else {
           addLog(`❌ "${query}" 검색 실패: 결과 없음, ${responseTime}ms`);
         }
-        
+
         // 연속 요청 간 잠시 대기
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      
+
       addLog('노래방 검색 테스트 완료!');
     } catch (error) {
       addLog(`노래방 검색 테스트 오류: ${getErrorMessage(error)}`);
@@ -216,24 +216,43 @@ const TestPage: React.FC = () => {
       <h3 className="text-lg font-bold text-gray-800 mb-3">{title}</h3>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <p><span className="font-medium">총 테스트:</span> {summary.totalTests}개</p>
-          <p><span className="font-medium">성공:</span> <span className="text-green-600">{summary.successCount}개</span></p>
-          <p><span className="font-medium">실패:</span> <span className="text-red-600">{summary.failureCount}개</span></p>
+          <p>
+            <span className="font-medium">총 테스트:</span> {summary.totalTests}개
+          </p>
+          <p>
+            <span className="font-medium">성공:</span>{' '}
+            <span className="text-green-600">{summary.successCount}개</span>
+          </p>
+          <p>
+            <span className="font-medium">실패:</span>{' '}
+            <span className="text-red-600">{summary.failureCount}개</span>
+          </p>
         </div>
         <div className="space-y-2">
-          <p><span className="font-medium">성공률:</span> {summary.successRate.toFixed(1)}%</p>
-          <p><span className="font-medium">평균 응답시간:</span> {summary.averageResponseTime.toFixed(0)}ms</p>
-          <p><span className="font-medium">최대 응답시간:</span> {summary.maxResponseTime}ms</p>
+          <p>
+            <span className="font-medium">성공률:</span> {summary.successRate.toFixed(1)}%
+          </p>
+          <p>
+            <span className="font-medium">평균 응답시간:</span>{' '}
+            {summary.averageResponseTime.toFixed(0)}ms
+          </p>
+          <p>
+            <span className="font-medium">최대 응답시간:</span> {summary.maxResponseTime}ms
+          </p>
         </div>
       </div>
-      
-      {summary.results.filter(r => !r.success).length > 0 && (
+
+      {summary.results.filter((r) => !r.success).length > 0 && (
         <div className="mt-4 p-3 bg-red-50 rounded">
           <h4 className="font-medium text-red-800 mb-2">실패한 테스트:</h4>
           <ul className="text-sm text-red-700 space-y-1">
-            {summary.results.filter(r => !r.success).map((failure, index) => (
-              <li key={index}>• {failure.videoId}: {failure.error}</li>
-            ))}
+            {summary.results
+              .filter((r) => !r.success)
+              .map((failure, index) => (
+                <li key={index}>
+                  • {failure.videoId}: {failure.error}
+                </li>
+              ))}
           </ul>
         </div>
       )}
@@ -244,7 +263,9 @@ const TestPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Firebase Functions 테스트 페이지</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Firebase Functions 테스트 페이지
+          </h1>
           <p className="text-gray-600">로그인이 필요합니다.</p>
         </div>
       </div>
@@ -255,9 +276,11 @@ const TestPage: React.FC = () => {
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">🧪 Firebase Functions 통합 테스트</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            🧪 Firebase Functions 통합 테스트
+          </h1>
           <p className="text-gray-600 mb-4">YouTube 스트림 URL 추출 시스템 성능 및 기능 검증</p>
-          
+
           <div className="flex items-center gap-4 mb-4">
             <span className="text-sm text-gray-500">사용자: {user.email}</span>
             <button
@@ -348,7 +371,9 @@ const TestPage: React.FC = () => {
                 <p className="text-gray-500">테스트를 실행하면 로그가 여기에 표시됩니다.</p>
               ) : (
                 logs.map((log, index) => (
-                  <div key={index} className="mb-1">{log}</div>
+                  <div key={index} className="mb-1">
+                    {log}
+                  </div>
                 ))
               )}
             </div>
@@ -362,9 +387,18 @@ const TestPage: React.FC = () => {
                 <div className="bg-indigo-50 p-4 rounded-lg mb-4">
                   <h3 className="text-lg font-bold text-indigo-800 mb-2">🎉 전체 요약</h3>
                   <div className="space-y-2 text-indigo-700">
-                    <p><span className="font-medium">총 테스트:</span> {results.overallSummary.totalTests}개</p>
-                    <p><span className="font-medium">성공률:</span> {results.overallSummary.successRate.toFixed(1)}%</p>
-                    <p><span className="font-medium">평균 응답시간:</span> {results.overallSummary.averageResponseTime.toFixed(0)}ms</p>
+                    <p>
+                      <span className="font-medium">총 테스트:</span>{' '}
+                      {results.overallSummary.totalTests}개
+                    </p>
+                    <p>
+                      <span className="font-medium">성공률:</span>{' '}
+                      {results.overallSummary.successRate.toFixed(1)}%
+                    </p>
+                    <p>
+                      <span className="font-medium">평균 응답시간:</span>{' '}
+                      {results.overallSummary.averageResponseTime.toFixed(0)}ms
+                    </p>
                   </div>
                 </div>
               )}
@@ -372,8 +406,11 @@ const TestPage: React.FC = () => {
               {results.healthCheck && (
                 <div className="bg-blue-50 p-4 rounded-lg mb-4">
                   <h3 className="text-lg font-bold text-blue-800 mb-2">🏥 헬스체크</h3>
-                  <p className={`font-medium ${results.healthCheck.success ? 'text-green-600' : 'text-red-600'}`}>
-                    {results.healthCheck.success ? '✅ 정상' : '❌ 실패'} ({results.healthCheck.responseTime}ms)
+                  <p
+                    className={`font-medium ${results.healthCheck.success ? 'text-green-600' : 'text-red-600'}`}
+                  >
+                    {results.healthCheck.success ? '✅ 정상' : '❌ 실패'} (
+                    {results.healthCheck.responseTime}ms)
                   </p>
                   {results.healthCheck.data && (
                     <pre className="text-xs mt-2 bg-blue-100 p-2 rounded overflow-x-auto">
@@ -385,9 +422,11 @@ const TestPage: React.FC = () => {
 
               {results.musicTest && formatTestSummary(results.musicTest, '🎵 음악 비디오 테스트')}
               {results.kpopTest && formatTestSummary(results.kpopTest, '🎤 K-pop 테스트')}
-              {results.classicalTest && formatTestSummary(results.classicalTest, '🎼 클래식 테스트')}
+              {results.classicalTest &&
+                formatTestSummary(results.classicalTest, '🎼 클래식 테스트')}
               {results.errorTest && formatTestSummary(results.errorTest, '🚫 에러 시나리오 테스트')}
-              {results.concurrentTest && formatTestSummary(results.concurrentTest, '⚡ 동시 요청 테스트')}
+              {results.concurrentTest &&
+                formatTestSummary(results.concurrentTest, '⚡ 동시 요청 테스트')}
 
               {Object.keys(results).length === 0 && (
                 <p className="text-gray-500 text-center py-8">
@@ -402,4 +441,4 @@ const TestPage: React.FC = () => {
   );
 };
 
-export default TestPage; 
+export default TestPage;

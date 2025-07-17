@@ -25,10 +25,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
     if (!user) return;
     try {
       const favorites = await getFavorites();
-      const ids = new Set(favorites.map(item => {
-        const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
-        return videoId;
-      }));
+      const ids = new Set(
+        favorites.map((item) => {
+          const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+          return videoId;
+        }),
+      );
       setFavoriteIds(ids);
     } catch (error) {
       console.error('즐겨찾기 ID 로딩 실패:', error);
@@ -45,7 +47,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
   const toggleFavorite = async (video: YouTubeSearchResultItem, e: React.MouseEvent) => {
     e.stopPropagation(); // 부모 클릭 이벤트 차단
     if (!user) return;
-    
+
     const videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
     const isFavorited = favoriteIds.has(videoId);
 
@@ -53,8 +55,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
       if (isFavorited) {
         // 즐겨찾기 제거 - 현재 즐겨찾기 목록에서 해당 항목을 찾아서 제거
         const favorites = await getFavorites();
-        const favoriteItem = favorites.find(item => {
-          const itemVideoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+        const favoriteItem = favorites.find((item) => {
+          const itemVideoId =
+            typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
           return itemVideoId === videoId;
         });
         if (favoriteItem) {
@@ -81,7 +84,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
     try {
       await addFavorite(selectedVideo, folderId);
       // 로컬 상태 즉시 업데이트
-      const videoId = typeof selectedVideo.id === 'string' ? selectedVideo.id : selectedVideo.id.videoId;
+      const videoId =
+        typeof selectedVideo.id === 'string' ? selectedVideo.id : selectedVideo.id.videoId;
       const newFavoriteIds = new Set(favoriteIds);
       newFavoriteIds.add(videoId);
       setFavoriteIds(newFavoriteIds);

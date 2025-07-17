@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Download, Star, Eye, User, Calendar, Tag, ArrowLeft, Plus } from 'lucide-react';
-import { searchSharedFolders, downloadSharedFolder, SharedFolder, getPopularTags } from '../../services/sharedFavoritesService';
+import {
+  searchSharedFolders,
+  downloadSharedFolder,
+  SharedFolder,
+  getPopularTags,
+} from '../../services/sharedFavoritesService';
 import { addFavorite } from '../../services/favoritesService';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingSpinner from '../Common/LoadingSpinner';
@@ -46,12 +51,12 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
   // 폴더 가져오기
   const handleDownload = async (folder: SharedFolder) => {
     if (!user) return;
-    
+
     setDownloading(folder.id);
     try {
       // 다운로드 카운트 증가
       await downloadSharedFolder(folder.id);
-      
+
       // 각 즐겨찾기를 사용자의 기본 폴더에 추가
       let successCount = 0;
       for (const favorite of folder.favorites) {
@@ -62,9 +67,9 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
           console.error('즐겨찾기 추가 실패:', favorite.video.snippet?.title, error);
         }
       }
-      
+
       alert(`"${folder.title}" 폴더에서 ${successCount}개의 즐겨찾기를 가져왔습니다.`);
-      
+
       // 다운로드 카운트 업데이트를 위해 목록 새로고침
       await searchFolders();
     } catch (error) {
@@ -102,17 +107,17 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
   const renderStars = (rating: number, ratingCount: number) => {
     const avgRating = ratingCount > 0 ? rating / ratingCount : 0;
     const stars = [];
-    
+
     for (let i = 1; i <= 5; i++) {
       stars.push(
         <Star
           key={i}
           size={12}
           className={i <= avgRating ? 'text-yellow-400 fill-current' : 'text-gray-400'}
-        />
+        />,
       );
     }
-    
+
     return (
       <div className="flex items-center gap-1">
         <div className="flex">{stars}</div>
@@ -139,17 +144,13 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
             </button>
             <h3 className="text-neon-yellow font-bold text-lg">{selectedFolder.title}</h3>
           </div>
-          
+
           <button
             onClick={() => handleDownload(selectedFolder)}
             disabled={downloading === selectedFolder.id}
             className="flex items-center gap-1 px-3 py-1.5 bg-neon-yellow text-black rounded-lg hover:bg-yellow-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
-            {downloading === selectedFolder.id ? (
-              <LoadingSpinner />
-            ) : (
-              <Download size={14} />
-            )}
+            {downloading === selectedFolder.id ? <LoadingSpinner /> : <Download size={14} />}
             가져오기
           </button>
         </div>
@@ -170,11 +171,11 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
               {selectedFolder.downloadCount}회 다운로드
             </div>
           </div>
-          
+
           {selectedFolder.description && (
             <p className="text-white text-sm">{selectedFolder.description}</p>
           )}
-          
+
           {selectedFolder.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {selectedFolder.tags.map((tag, index) => (
@@ -187,13 +188,15 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
               ))}
             </div>
           )}
-          
+
           {renderStars(selectedFolder.rating, selectedFolder.ratingCount)}
         </div>
 
         {/* 즐겨찾기 목록 */}
         <div className="space-y-2">
-          <h4 className="text-white font-medium">즐겨찾기 목록 ({selectedFolder.favoriteCount}개)</h4>
+          <h4 className="text-white font-medium">
+            즐겨찾기 목록 ({selectedFolder.favoriteCount}개)
+          </h4>
           <div className="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
             {selectedFolder.favorites.map((favorite, index) => (
               <div
@@ -230,7 +233,10 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
       <div className="space-y-3">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               value={searchQuery}
@@ -239,7 +245,7 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
               className="w-full pl-10 pr-4 py-2 bg-dark-bg border border-neon-yellow text-white rounded-lg focus:border-yellow-300 focus:shadow-glow-md outline-none transition-all duration-300 placeholder-gray-400 text-sm"
             />
           </div>
-          
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'latest' | 'popular' | 'rating')}
@@ -297,13 +303,11 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
                     </span>
                   </div>
                 </div>
-                
+
                 {folder.description && (
-                  <p className="text-gray-400 text-xs mb-2 line-clamp-2">
-                    {folder.description}
-                  </p>
+                  <p className="text-gray-400 text-xs mb-2 line-clamp-2">{folder.description}</p>
                 )}
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
@@ -312,10 +316,10 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
                     </span>
                     <span>{formatDate(folder.createdAt)}</span>
                   </div>
-                  
+
                   {renderStars(folder.rating, folder.ratingCount)}
                 </div>
-                
+
                 {folder.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {folder.tags.slice(0, 3).map((tag, index) => (
@@ -350,4 +354,4 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
   );
 };
 
-export default SharedFavoritesList; 
+export default SharedFavoritesList;

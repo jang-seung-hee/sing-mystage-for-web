@@ -15,7 +15,16 @@ interface VideoPanelProps {
   onEnded?: () => void;
 }
 
-const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, loading, error, playlist, currentIndex, onEnded }) => {
+const VideoPanel: React.FC<VideoPanelProps> = ({
+  selected,
+  streamUrl,
+  adFree,
+  loading,
+  error,
+  playlist,
+  currentIndex,
+  onEnded,
+}) => {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -61,7 +70,7 @@ const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, lo
           </div>
         </div>
       )}
-      
+
       {/* 에러 상태 */}
       {error && !loading && (
         <div className="flex-1 flex items-center justify-center">
@@ -74,10 +83,10 @@ const VideoPanel: React.FC<VideoPanelProps> = ({ selected, streamUrl, adFree, lo
 
       {/* 정상 상태: 비디오 영역만 표시 (컨트롤 패널 제거) */}
       {!loading && !error && (
-        <VideoArea 
+        <VideoArea
           ref={playerRef}
-          selected={selected} 
-          streamUrl={streamUrl} 
+          selected={selected}
+          streamUrl={streamUrl}
           adFree={adFree}
           playlist={playlist}
           currentIndex={currentIndex}

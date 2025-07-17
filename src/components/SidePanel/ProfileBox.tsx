@@ -16,7 +16,6 @@ const ProfileBox: React.FC = () => {
             </h1>
             {/* 네온 글로우 이펙트 */}
             <div className="absolute -inset-[6px] bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow rounded-lg opacity-20 blur-sm animate-pulse"></div>
-
           </div>
         </div>
 
@@ -37,7 +36,9 @@ const ProfileBox: React.FC = () => {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-white text-xs truncate">{user.displayName || user.email}</div>
+            <div className="font-bold text-white text-xs truncate">
+              {user.displayName || user.email}
+            </div>
             <button
               className="text-xs text-red-400 hover:text-red-300 transition-colors duration-200"
               onClick={logout}

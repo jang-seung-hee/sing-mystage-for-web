@@ -43,12 +43,12 @@ const VideoControls: React.FC<VideoControlsProps> = ({
     if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
       return '0:00';
     }
-    
+
     // 0초도 정상적으로 처리
     const totalSeconds = Math.floor(seconds);
     const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
-    
+
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -62,12 +62,12 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   // 진행 바 클릭 핸들러
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!onSeek || duration === 0) return;
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const percentage = clickX / rect.width;
     const newTime = percentage * duration;
-    
+
     onSeek(newTime);
   };
 
@@ -77,7 +77,10 @@ const VideoControls: React.FC<VideoControlsProps> = ({
       <div className="absolute inset-0 bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow opacity-5"></div>
 
       {/* 진행바 */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-dark-card cursor-pointer" onClick={handleProgressClick}>
+      <div
+        className="absolute top-0 left-0 right-0 h-1 bg-dark-card cursor-pointer"
+        onClick={handleProgressClick}
+      >
         <div
           className="h-full bg-gradient-to-r from-neon-cyan to-neon-pink shadow-neon-cyan transition-all duration-300"
           style={{ width: `${progress}%` }}
@@ -230,7 +233,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
               size={16}
               className={`sm:w-[18px] sm:h-[18px] group-hover:scale-110 transition-transform ${isFavorite ? 'fill-current' : ''}`}
             />
-      </button>
+          </button>
 
           {/* 설정 (모바일에서 숨김) */}
           <button className="hidden sm:block p-2 sm:p-3 bg-dark-card border border-gray-400 text-gray-400 rounded-lg hover:bg-gray-400 hover:text-black hover:shadow-glow-sm transition-all duration-300 group touch-manipulation">
@@ -238,7 +241,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
               size={16}
               className="sm:w-[18px] sm:h-[18px] group-hover:scale-110 transition-transform group-hover:rotate-90"
             />
-      </button>
+          </button>
         </div>
       </div>
 

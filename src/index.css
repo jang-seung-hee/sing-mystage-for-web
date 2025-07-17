@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* 전체 화면 높이 설정 */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -54,7 +56,7 @@ code {
 }
 
 .red-cross-glow {
-  box-shadow: 
+  box-shadow:
     0 0 5px #ef4444,
     0 0 10px #ef4444,
     0 0 15px #ef4444,
@@ -74,12 +76,16 @@ code {
   background: #00ffff;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+  box-shadow:
+    0 0 10px #00ffff,
+    0 0 20px #00ffff;
   transition: all 0.3s ease;
 }
 
 .slider-neon-cyan::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 15px #00ffff, 0 0 30px #00ffff;
+  box-shadow:
+    0 0 15px #00ffff,
+    0 0 30px #00ffff;
   transform: scale(1.1);
 }
 
@@ -90,12 +96,16 @@ code {
   background: #ff00ff;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+  box-shadow:
+    0 0 10px #ff00ff,
+    0 0 20px #ff00ff;
   transition: all 0.3s ease;
 }
 
 .slider-neon-pink::-webkit-slider-thumb:hover {
-  box-shadow: 0 0 15px #ff00ff, 0 0 30px #ff00ff;
+  box-shadow:
+    0 0 15px #ff00ff,
+    0 0 30px #ff00ff;
   transform: scale(1.1);
 }
 
@@ -107,7 +117,9 @@ code {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+  box-shadow:
+    0 0 10px #00ffff,
+    0 0 20px #00ffff;
 }
 
 .slider-neon-pink::-moz-range-thumb {
@@ -117,7 +129,9 @@ code {
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+  box-shadow:
+    0 0 10px #ff00ff,
+    0 0 20px #ff00ff;
 }
 
 /* Custom Scrollbar Styles */
@@ -163,12 +177,15 @@ code {
 
 /* 추가 키프레임 애니메이션 */
 @keyframes redPulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 5px #ef4444;
     filter: brightness(1);
   }
   50% {
-    box-shadow: 0 0 15px #ef4444, 0 0 25px #ef4444;
+    box-shadow:
+      0 0 15px #ef4444,
+      0 0 25px #ef4444;
     filter: brightness(1.3);
   }
 }
@@ -190,6 +207,23 @@ code {
   }
 }
 
+@keyframes glow-right {
+  0% { opacity: 0.7; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(8px); }
+  100% { opacity: 0.7; transform: translateX(0); }
+}
+@keyframes glow-left {
+  0% { opacity: 0.7; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(-8px); }
+  100% { opacity: 0.7; transform: translateX(0); }
+}
+.animate-glow-right {
+  animation: glow-right 1.2s infinite ease-in-out;
+}
+.animate-glow-left {
+  animation: glow-left 1.2s infinite ease-in-out;
+}
+
 /* 커스텀 애니메이션 클래스 */
 .animate-red-pulse {
   animation: redPulse 2s ease-in-out infinite;
@@ -204,13 +238,13 @@ code {
   .neon-reduced {
     filter: brightness(0.8);
   }
-  
+
   /* Touch-friendly sizing */
   .touch-manipulation {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   /* 모바일에서 애니메이션 성능 최적화 */
   .mobile-optimized {
     will-change: transform, opacity;

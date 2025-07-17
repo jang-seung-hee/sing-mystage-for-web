@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Folder, Plus, Edit3, Trash2, Check, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { addFolder, updateFolder, deleteFolder, getFolders, FolderItem } from '../../services/foldersService';
+import {
+  addFolder,
+  updateFolder,
+  deleteFolder,
+  getFolders,
+  FolderItem,
+} from '../../services/foldersService';
 import LoadingSpinner from '../Common/LoadingSpinner';
 
 const FolderList: React.FC = () => {
@@ -9,7 +15,7 @@ const FolderList: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  
+
   const [newListName, setNewListName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -20,14 +26,14 @@ const FolderList: React.FC = () => {
     if (!user) return;
     setLoading(true);
     setError(null);
-          try {
-        const folderList = await getFolders();
-        setFolders(folderList);
-      } catch (err: any) {
-        setError(err.message || '찜 목록 불러오기 실패');
-      } finally {
-        setLoading(false);
-      }
+    try {
+      const folderList = await getFolders();
+      setFolders(folderList);
+    } catch (err: any) {
+      setError(err.message || '찜 목록 불러오기 실패');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -38,7 +44,7 @@ const FolderList: React.FC = () => {
 
   const handleAddFolder = async () => {
     if (!newListName.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     try {
@@ -55,7 +61,7 @@ const FolderList: React.FC = () => {
 
   const handleEditFolder = async (id: string, newName: string) => {
     if (!newName.trim()) return;
-    
+
     setLoading(true);
     setError(null);
     try {
@@ -72,18 +78,18 @@ const FolderList: React.FC = () => {
 
   const handleDeleteFolder = async (id: string) => {
     // 기본 찜 목록은 삭제 불가
-    const folder = folders.find(f => f.id === id);
+    const folder = folders.find((f) => f.id === id);
     if (folder?.name === '기본 폴더') {
       setError('기본 찜 목록은 삭제할 수 없습니다');
       return;
     }
-    
+
     setDeleteConfirm(id);
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
-    
+
     setLoading(true);
     setError(null);
     try {
@@ -112,11 +118,7 @@ const FolderList: React.FC = () => {
   };
 
   if (!user) {
-    return (
-      <div className="text-center py-8 text-gray-400">
-        로그인이 필요합니다
-      </div>
-    );
+    return <div className="text-center py-8 text-gray-400">로그인이 필요합니다</div>;
   }
 
   return (
@@ -125,10 +127,7 @@ const FolderList: React.FC = () => {
       {error && (
         <div className="bg-red-900 border border-red-500 text-red-200 p-3 rounded-lg text-sm">
           {error}
-          <button 
-            onClick={() => setError(null)}
-            className="ml-2 text-red-400 hover:text-red-300"
-          >
+          <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-300">
             ✕
           </button>
         </div>
@@ -154,7 +153,10 @@ const FolderList: React.FC = () => {
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddFolder();
-                if (e.key === 'Escape') { setIsAdding(false); setNewListName(''); }
+                if (e.key === 'Escape') {
+                  setIsAdding(false);
+                  setNewListName('');
+                }
               }}
             />
             <button
@@ -166,7 +168,11 @@ const FolderList: React.FC = () => {
               <Check size={16} />
             </button>
             <button
-              onClick={() => { setIsAdding(false); setNewListName(''); setError(null); }}
+              onClick={() => {
+                setIsAdding(false);
+                setNewListName('');
+                setError(null);
+              }}
               disabled={loading}
               className="p-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               title="취소"
@@ -210,7 +216,9 @@ const FolderList: React.FC = () => {
               ) : (
                 <div className="flex-1 leading-tight">
                   <div className="text-white font-medium text-xs">{folder.name}</div>
-                  <div className="text-gray-400 text-xs leading-none">{folder.count}개 즐겨찾기</div>
+                  <div className="text-gray-400 text-xs leading-none">
+                    {folder.count}개 즐겨찾기
+                  </div>
                 </div>
               )}
             </div>
@@ -297,4 +305,4 @@ const FolderList: React.FC = () => {
   );
 };
 
-export default FolderList; 
+export default FolderList;

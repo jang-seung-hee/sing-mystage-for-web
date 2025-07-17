@@ -47,14 +47,14 @@ const AuthForm: React.FC = () => {
             type="email"
             placeholder="이메일"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 rounded bg-black text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
           />
           <input
             type="password"
             placeholder="비밀번호"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 rounded bg-black text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-neon-cyan"
           />
           <button

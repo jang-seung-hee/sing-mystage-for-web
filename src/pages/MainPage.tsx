@@ -1,5 +1,5 @@
 import React, { useState, Suspense, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { searchYouTube, getAdFreeStreamUrl } from '../services/youtubeApi';
 import { addRecent } from '../services/recentService';
 import { YouTubeSearchResultItem } from '../types/youtube';
@@ -12,9 +12,9 @@ const VideoPanel = React.lazy(() => import('../components/VideoPanel/VideoPanel'
 const MainPage: React.FC = () => {
   // 모든 hooks를 최상단에 배치
   const { user, loading: authLoading } = useAuth();
-  
-  // 사이드바 토글 상태 (데스크톱: 기본 열림, 모바일: 기본 닫힘)
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
+
+  // 사이드바 토글 상태 (모바일: 기본 열림, 데스크톱: 기본 열림)
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // 검색/선택/영상 상태 관리
   const [results, setResults] = useState<YouTubeSearchResultItem[]>([]);
@@ -82,22 +82,22 @@ const MainPage: React.FC = () => {
     setSearchLoading(true);
     setError(null);
     setResults([]);
-    
+
     // 검색어 조합 로직
     let searchQuery = query.trim();
     if (type !== 'all') {
       // 일반검색이 아닌 경우 타입에 따른 키워드 추가
       const typeKeywords = {
-        'video': '노래방',
-        'music': '원곡',
-        'cover': '커버곡'
+        video: '노래방',
+        music: '원곡',
+        cover: '커버곡',
       };
       const typeKeyword = typeKeywords[type as keyof typeof typeKeywords];
       if (typeKeyword) {
         searchQuery = `${query.trim()} ${typeKeyword}`;
       }
     }
-    
+
     try {
       const res = await searchYouTube(searchQuery);
       setResults(res);
@@ -120,7 +120,7 @@ const MainPage: React.FC = () => {
       // 최근본 영상 탭에서만 addRecent 및 트리거
       if (user && tab === 'recent') {
         await addRecent(item);
-        setRecentUpdateTrigger(prev => prev + 1);
+        setRecentUpdateTrigger((prev) => prev + 1);
       }
       const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
       setStreamUrl(url);
@@ -153,10 +153,23 @@ const MainPage: React.FC = () => {
       {/* 햄버거 메뉴 버튼 */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-3 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95"
+        className="fixed bottom-4 right-4 p-1.5 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95 flex items-center justify-center"
         aria-label="메뉴 토글"
+        style={{ minWidth: 29, minHeight: 29, zIndex: 9999 }}
       >
-        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        <span className={`relative flex items-center justify-center`}>
+          {sidebarOpen ? (
+            <>
+              <ChevronLeft size={17} className="drop-shadow-[0_0_6px_#00fff7] animate-glow-left" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-l from-neon-cyan/60 to-transparent blur-md animate-glow-left" />
+            </>
+          ) : (
+            <>
+              <ChevronRight size={17} className="drop-shadow-[0_0_6px_#ff00ea] animate-glow-right" />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-neon-pink/60 to-transparent blur-md animate-glow-right" />
+            </>
+          )}
+        </span>
       </button>
 
       {/* 모바일 오버레이 */}

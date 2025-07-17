@@ -20,7 +20,18 @@ interface SidePanelProps {
   onPlayRandom?: (favorites: any[]) => void;
 }
 
-const SidePanel: React.FC<SidePanelProps> = ({ results, loading, error, onSearch, onSelect, isOpen, setSidebarOpen, recentUpdateTrigger, onPlayAll, onPlayRandom }) => {
+const SidePanel: React.FC<SidePanelProps> = ({
+  results,
+  loading,
+  error,
+  onSearch,
+  onSelect,
+  isOpen,
+  setSidebarOpen,
+  recentUpdateTrigger,
+  onPlayAll,
+  onPlayRandom,
+}) => {
   // 모바일 환경 감지
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -38,7 +49,7 @@ const SidePanel: React.FC<SidePanelProps> = ({ results, loading, error, onSearch
     onSwipedRight: () => {
       if (isMobile && !isOpen) setSidebarOpen(true);
     },
-    trackTouch: true
+    trackTouch: true,
   });
 
   return (
@@ -77,12 +88,22 @@ const SidePanel: React.FC<SidePanelProps> = ({ results, loading, error, onSearch
         <div className="h-2" />
         <SearchBox onSearch={onSearch} />
         {/* 고정 높이 영역: 검색결과 */}
-        <div style={{maxHeight: 197}} className="flex flex-col">
-          <SearchResultBox results={results} loading={loading} error={error} onSelect={(item) => onSelect(item, 'recent')} />
+        <div style={{ maxHeight: 197 }} className="flex flex-col">
+          <SearchResultBox
+            results={results}
+            loading={loading}
+            error={error}
+            onSelect={(item) => onSelect(item, 'recent')}
+          />
         </div>
         {/* 가변 영역: 리스트 */}
         <div className="flex-1 min-h-0 flex flex-col">
-          <ListBox onSelect={onSelect} recentUpdateTrigger={recentUpdateTrigger} onPlayAll={onPlayAll} onPlayRandom={onPlayRandom} />
+          <ListBox
+            onSelect={onSelect}
+            recentUpdateTrigger={recentUpdateTrigger}
+            onPlayAll={onPlayAll}
+            onPlayRandom={onPlayRandom}
+          />
         </div>
       </aside>
     </>

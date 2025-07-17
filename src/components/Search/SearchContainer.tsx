@@ -24,10 +24,10 @@ const SearchContainer: React.FC = () => {
     setSelected(null);
     setStreamUrl(null);
     setAdFree(false);
-    
+
     try {
       let items;
-      
+
       if (type === 'video') {
         // 노래방 검색: yt-search 기반 (Firebase Functions)
         // TJ노래방, 금영노래방 등 제한된 영상도 검색 가능
@@ -38,8 +38,8 @@ const SearchContainer: React.FC = () => {
         if (type !== 'all') {
           // 일반검색이 아닌 경우 타입에 따른 키워드 추가
           const typeKeywords = {
-            'music': '원곡',
-            'cover': '커버곡'
+            music: '원곡',
+            cover: '커버곡',
           };
           const typeKeyword = typeKeywords[type as keyof typeof typeKeywords];
           if (typeKeyword) {
@@ -48,7 +48,7 @@ const SearchContainer: React.FC = () => {
         }
         items = await searchYouTube(searchQuery, 50);
       }
-      
+
       setResults(items);
     } catch (err: any) {
       setError(err.message || '검색 실패');

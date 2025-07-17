@@ -1,11 +1,39 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Clock, Heart, Trash2, ArrowLeft, Folder, Plus, Check, X, Share2, Download, Loader2 } from 'lucide-react';
+import {
+  Clock,
+  Heart,
+  Trash2,
+  ArrowLeft,
+  Folder,
+  Plus,
+  Check,
+  X,
+  Share2,
+  Download,
+  Loader2,
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getRecents } from '../../services/recentService';
-import { getFavorites, getFavoritesByFolder, addFavorite, removeFavorite } from '../../services/favoritesService';
+import {
+  getFavorites,
+  getFavoritesByFolder,
+  addFavorite,
+  removeFavorite,
+  moveFavoriteToFolder,
+} from '../../services/favoritesService';
 import { shareFolder } from '../../services/sharedFavoritesService';
-import { getFolders, addFolder, FolderItem, importOnlineFolder, deleteFolder } from '../../services/foldersService';
-import { searchSharedFolders, SharedFolder, deleteSharedFolder } from '../../services/sharedFavoritesService';
+import {
+  getFolders,
+  addFolder,
+  FolderItem,
+  importOnlineFolder,
+  deleteFolder,
+} from '../../services/foldersService';
+import {
+  searchSharedFolders,
+  SharedFolder,
+  deleteSharedFolder,
+} from '../../services/sharedFavoritesService';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 
@@ -25,7 +53,12 @@ interface ListBoxProps {
   onPlayRandom?: (favorites: any[]) => void;
 }
 
-const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlayAll, onPlayRandom }) => {
+const ListBox: React.FC<ListBoxProps> = ({
+  onSelect,
+  recentUpdateTrigger,
+  onPlayAll,
+  onPlayRandom,
+}) => {
   const [tab, setTab] = useState<'recent' | 'favorites'>('recent');
   const [recents, setRecents] = useState<ListItem[]>([]);
   const [favorites, setFavorites] = useState<ListItem[]>([]);
@@ -48,25 +81,30 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   const [selectedOnlineFolder, setSelectedOnlineFolder] = useState<SharedFolder | null>(null);
   const [importLoading, setImportLoading] = useState<string | null>(null);
   const { user } = useAuth();
+  const [selectedFavoriteId, setSelectedFavoriteId] = useState<string | null>(null);
+  const [selectedFavoriteVideo, setSelectedFavoriteVideo] = useState<YouTubeSearchResultItem | null>(null);
 
   // 3일 = 3 * 24 * 60 * 60 * 1000 ms
   const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
   // 3일 이전 데이터 필터링 함수
-  const filterRecentItems = useCallback((items: ListItem[]): ListItem[] => {
-    const now = Date.now();
-    return items.filter(item => {
-      const itemDate = item.playedAt || item.createdAt || 0;
-      return (now - itemDate) <= THREE_DAYS_MS;
-    });
-  }, [THREE_DAYS_MS]);
+  const filterRecentItems = useCallback(
+    (items: ListItem[]): ListItem[] => {
+      const now = Date.now();
+      return items.filter((item) => {
+        const itemDate = item.playedAt || item.createdAt || 0;
+        return now - itemDate <= THREE_DAYS_MS;
+      });
+    },
+    [THREE_DAYS_MS],
+  );
 
   // 최근 재생 목록 로드
   const loadRecents = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const items = await getRecents() as ListItem[];
+      const items = (await getRecents()) as ListItem[];
       // 3일 이전 데이터 필터링
       const filteredItems = filterRecentItems(items);
       setRecents(filteredItems);
@@ -97,11 +135,13 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   const loadFavoriteIds = useCallback(async () => {
     if (!user) return;
     try {
-      const allFavorites = await getFavorites() as ListItem[];
-      const ids = new Set(allFavorites.map(item => {
-        const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
-        return videoId;
-      }));
+      const allFavorites = (await getFavorites()) as ListItem[];
+      const ids = new Set(
+        allFavorites.map((item) => {
+          const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+          return videoId;
+        }),
+      );
       setFavoriteIds(ids);
     } catch (error) {
       console.error('찜 영상 ID 불러오기 실패:', error);
@@ -109,30 +149,33 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   }, [user]);
 
   // 찜 영상 목록 로드 (전체 또는 특정 폴더)
-  const loadFavorites = useCallback(async (folderId?: string) => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      let items: ListItem[];
-      
-      if (!folderId) {
-        // 전체 찜 영상
-        items = await getFavorites() as ListItem[];
-      } else {
-        // 특정 폴더의 찜 영상
-        const isDefaultFolder = folderId === 'default';
-        const actualFolderId = isDefaultFolder ? undefined : folderId;
-        items = await getFavoritesByFolder(actualFolderId) as ListItem[];
+  const loadFavorites = useCallback(
+    async (folderId?: string) => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        let items: ListItem[];
+
+        if (!folderId) {
+          // 전체 찜 영상
+          items = (await getFavorites()) as ListItem[];
+        } else {
+          // 특정 폴더의 찜 영상
+          const isDefaultFolder = folderId === 'default';
+          const actualFolderId = isDefaultFolder ? undefined : folderId;
+          items = (await getFavoritesByFolder(actualFolderId)) as ListItem[];
+        }
+
+        setFavorites(items);
+      } catch (error) {
+        console.error('찜 영상 목록 불러오기 실패:', error);
+        setFavorites([]);
+      } finally {
+        setLoading(false);
       }
-      
-      setFavorites(items);
-    } catch (error) {
-      console.error('찜 영상 목록 불러오기 실패:', error);
-      setFavorites([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    },
+    [user],
+  );
 
   useEffect(() => {
     if (user) {
@@ -159,37 +202,42 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   }, [user, tab, loadRecents]);
 
   // 찜 토글 - 폴더 선택 기능 추가
+  const openFolderSelector = (video: YouTubeSearchResultItem, favoriteId?: string) => {
+    setSelectedFavoriteVideo(video);
+    setSelectedFavoriteId(favoriteId || null);
+    setFolderSelectorOpen(true);
+  };
+
+  const handleMoveFavorite = (favoriteId: string, video: YouTubeSearchResultItem) => {
+    openFolderSelector(video, favoriteId);
+  };
+
   const toggleFavorite = async (video: YouTubeSearchResultItem) => {
     if (!user) return;
-    
     const videoId = typeof video.id === 'string' ? video.id : video.id.videoId;
     const isFavorited = favoriteIds.has(videoId);
-
     try {
       if (isFavorited) {
         // 찜 영상 제거
-        const favoriteItem = favorites.find(item => {
-          const itemVideoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
+        const favoriteItem = favorites.find((item) => {
+          const itemVideoId =
+            typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
           return itemVideoId === videoId;
         });
         if (favoriteItem) {
           await removeFavorite(favoriteItem.id);
-          
-          // favoriteIds 상태 즉시 업데이트
           const newFavoriteIds = new Set(favoriteIds);
           newFavoriteIds.delete(videoId);
           setFavoriteIds(newFavoriteIds);
         }
-        // 찜 목록 화면이면 목록도 업데이트
         if (selectedFolderId) {
           await loadFavorites(selectedFolderId);
         } else if (tab === 'favorites') {
           await loadFolders();
         }
       } else {
-        // 찜 영상 추가 - 폴더 선택 모달 열기
-        setSelectedVideo(video);
-        setFolderSelectorOpen(true);
+        // 찜 추가: 폴더 선택 모달 오픈
+        openFolderSelector(video);
       }
     } catch (error) {
       console.error('찜 영상 토글 실패:', error);
@@ -198,17 +246,14 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
 
   // 폴더 선택 완료 핸들러
   const handleFolderSelect = async (folderId?: string) => {
-    if (!selectedVideo) return;
+    if (!selectedFavoriteVideo) return;
 
     try {
-      await addFavorite(selectedVideo, folderId);
-      
-      // favoriteIds 상태 즉시 업데이트
-      const videoId = typeof selectedVideo.id === 'string' ? selectedVideo.id : selectedVideo.id.videoId;
-      const newFavoriteIds = new Set(favoriteIds);
-      newFavoriteIds.add(videoId);
-      setFavoriteIds(newFavoriteIds);
-      
+      await addFavorite(selectedFavoriteVideo, folderId);
+
+      // 찜 영상 ID 전체 새로고침 (하트 상태 일관성)
+      await loadFavoriteIds();
+
       // 찜 목록 화면이면 목록도 업데이트
       if (selectedFolderId) {
         await loadFavorites(selectedFolderId);
@@ -218,7 +263,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
     } catch (error) {
       console.error('찜 영상 추가 실패:', error);
     } finally {
-      setSelectedVideo(null);
+      setSelectedFavoriteVideo(null);
     }
   };
 
@@ -226,18 +271,13 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   const handleRemoveFavorite = async (favoriteId: string) => {
     try {
       // 삭제할 찜 영상의 videoId 찾기
-      const favoriteItem = favorites.find(item => item.id === favoriteId);
-      
+      const favoriteItem = favorites.find((item) => item.id === favoriteId);
+
       await removeFavorite(favoriteId);
-      
-      // favoriteIds 상태 즉시 업데이트
-      if (favoriteItem) {
-        const videoId = typeof favoriteItem.video.id === 'string' ? favoriteItem.video.id : favoriteItem.video.id.videoId;
-        const newFavoriteIds = new Set(favoriteIds);
-        newFavoriteIds.delete(videoId);
-        setFavoriteIds(newFavoriteIds);
-      }
-      
+
+      // 찜 영상 ID 전체 새로고침 (하트 상태 일관성)
+      await loadFavoriteIds();
+
       // 찜 목록 화면 업데이트
       if (selectedFolderId) {
         await loadFavorites(selectedFolderId);
@@ -268,7 +308,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
   // 찜 목록 추가 핸들러
   const handleAddList = async () => {
     if (!newListName.trim()) return;
-    
+
     setLoading(true);
     setAddListError(null);
     try {
@@ -292,6 +332,17 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
 
   // 온라인 공유 핸들러
   const handleShareClick = () => {
+    // Only set default if shareTitle is empty (user hasn't typed yet)
+    if (!shareTitle) {
+      let folderName = '기본 찜 목록';
+      if (selectedFolderId && selectedFolderId !== 'default') {
+        const folder = folders.find((f) => f.id === selectedFolderId);
+        if (folder && folder.name) {
+          folderName = folder.name;
+        }
+      }
+      setShareTitle(`☁️ ${folderName}`);
+    }
     setShowShareModal(true);
   };
 
@@ -304,21 +355,21 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
     setShareLoading(true);
     try {
       // ListItem을 FavoriteItem 형태로 변환 (undefined 값 제거)
-      const favoritesToShare = favorites.map(item => {
+      const favoritesToShare = favorites.map((item) => {
         const favoriteData: any = {
           id: item.id,
           uid: user?.uid || '',
           video: item.video,
-          createdAt: item.createdAt || Date.now()
+          createdAt: item.createdAt || Date.now(),
         };
-        
+
         // undefined 값 제거
-        Object.keys(favoriteData).forEach(key => {
+        Object.keys(favoriteData).forEach((key) => {
           if (favoriteData[key] === undefined) {
             delete favoriteData[key];
           }
         });
-        
+
         return favoriteData;
       });
 
@@ -326,11 +377,11 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
         shareTitle.trim(),
         '', // 설명은 빈 문자열
         [], // 태그는 빈 배열
-        favoritesToShare
+        favoritesToShare,
       );
-      
+
       alert(`"${shareTitle}" 찜 목록이 성공적으로 공유되었습니다!`);
-      
+
       // 초기화
       setShareTitle('');
       setShowShareModal(false);
@@ -380,10 +431,10 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
     try {
       await importOnlineFolder(folder);
       alert(`"${folder.title}" 폴더를 성공적으로 가져왔습니다!`);
-      
+
       // 폴더 목록 새로고침
       await loadFolders();
-      
+
       // 모달 닫기
       handleOnlineModalClose();
     } catch (error: any) {
@@ -393,12 +444,21 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
     }
   };
 
-  const handleRemoveFolder = async (folderId: string, folderName: string, isFromOnline?: boolean) => {
+  const handleRemoveFolder = async (
+    folderId: string,
+    folderName: string,
+    isFromOnline?: boolean,
+  ) => {
     if (folderName === '기본 폴더') {
       alert('기본 폴더는 삭제할 수 없습니다.');
       return;
     }
-    if (!window.confirm(`'${folderName}' 폴더를 삭제하시겠습니까?\n폴더 내 즐겨찾기는 기본 폴더로 이동됩니다.`)) return;
+    if (
+      !window.confirm(
+        `'${folderName}' 폴더를 삭제하시겠습니까?\n폴더 내 즐겨찾기는 기본 폴더로 이동됩니다.`,
+      )
+    )
+      return;
     setLoading(true);
     try {
       // 폴더 삭제
@@ -431,15 +491,30 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
     }
   };
 
+  const handleMoveToFolder = async (folderId?: string) => {
+    if (!selectedFavoriteId) return;
+    await moveFavoriteToFolder(selectedFavoriteId, folderId);
+    // 이동 후 프론트엔드에서 즉시 목록에서 제거
+    if (selectedFolderId === 'default') {
+      setFavorites((prev) => prev.filter(item => item.id !== selectedFavoriteId));
+    } else if (selectedFolderId) {
+      await loadFavorites(selectedFolderId);
+    }
+    setFolderSelectorOpen(false);
+    setSelectedFavoriteId(null);
+    setSelectedFavoriteVideo(null);
+  };
+
   const renderListItem = (item: ListItem, index: number) => {
     const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
     const isFavorited = favoriteIds.has(videoId);
     const title = item.video.snippet?.title || '제목 없음';
     const channelTitle = item.video.snippet?.channelTitle || '채널 없음';
 
-    const gradientBg = tab === 'recent' 
-      ? 'from-neon-cyan via-transparent to-transparent'
-      : 'from-neon-pink via-transparent to-transparent';
+    const gradientBg =
+      tab === 'recent'
+        ? 'from-neon-cyan via-transparent to-transparent'
+        : 'from-neon-pink via-transparent to-transparent';
 
     return (
       <div
@@ -448,51 +523,66 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
           bg-dark-card border-dark-border flex items-center ${
             tab === 'recent' ? 'hover:border-neon-cyan' : 'hover:border-neon-pink'
           }`}
-        style={{ 
+        style={{
           animationDelay: `${index * 50}ms`,
-          animation: 'fadeInUp 0.5s ease-out forwards'
+          animation: 'fadeInUp 0.5s ease-out forwards',
         }}
         onClick={() => onSelect && onSelect(item.video, tab)}
       >
         {/* 호버 그라데이션 효과 */}
-        <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r ${gradientBg} rounded-lg`}></div>
+        <div
+          className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-r ${gradientBg} rounded-lg`}
+        ></div>
 
         {/* 메인 콘텐츠 */}
         <div className="flex-1 flex flex-col justify-center min-w-0 z-10">
           {/* 제목 */}
-          <h4 
+          <h4
             className={`font-medium text-sm transition-colors duration-300 truncate ${
-              tab === 'recent' ? 'text-white group-hover:text-neon-cyan' : 'text-white group-hover:text-neon-pink'
+              tab === 'recent'
+                ? 'text-white group-hover:text-neon-cyan'
+                : 'text-white group-hover:text-neon-pink'
             }`}
             title={title}
           >
             {title}
           </h4>
-          
+
           {/* 채널명 */}
-          <p className="text-xs text-gray-400 mt-0.5 truncate">
-            {channelTitle}
-          </p>
+          <p className="text-xs text-gray-400 mt-0.5 truncate">{channelTitle}</p>
         </div>
 
         {/* 버튼 영역 */}
         <div className="flex items-center gap-2 flex-shrink-0 ml-3 z-10">
-          {/* 찜 버튼 */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(item.video);
-            }}
-            className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${
-              isFavorited
-                ? 'text-neon-pink hover:text-pink-300'
-                : 'text-gray-500 hover:text-neon-pink'
-            }`}
-            title={isFavorited ? '찜 제거' : '찜 추가'}
-          >
-            <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
-          </button>
-
+          {/* 이동 아이콘: 기본 찜 목록에서만 노출 */}
+          {tab === 'favorites' && selectedFolderId === 'default' ? (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                handleMoveFavorite(item.id, item.video);
+              }}
+              className="p-1.5 rounded-full transition-all duration-300 hover:scale-110 text-neon-cyan hover:text-neon-pink"
+              title="찜 목록 이동"
+            >
+              {/* 이동(폴더+화살표) SVG */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h4l2 3h7a2 2 0 0 1 2 2v2"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+          ) : (
+            // 기존 하트(찜) 아이콘: 나머지 경우
+            <button
+              onClick={e => {
+                e.stopPropagation();
+              }}
+              className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${
+                isFavorited
+                  ? 'text-neon-pink hover:text-pink-300'
+                  : 'text-gray-500 hover:text-neon-pink'
+              }`}
+              title={isFavorited ? '찜 제거' : '찜 추가'}
+            >
+              <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
+            </button>
+          )}
           {/* 삭제 버튼 (즐겨찾기 탭에서만) */}
           {tab === 'favorites' && (
             <button
@@ -520,28 +610,27 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
         key={`folder-${folder.id}-${index}`}
         onClick={() => handleFolderClick(folder.id)}
         className={`flex items-center justify-between w-full py-2 px-3 rounded-lg border transition-all duration-300 cursor-pointer
-          ${selectedFolderId === folder.id 
-            ? `bg-${folderColor} text-black border-${folderColor}` 
-            : `bg-dark-card text-${folderColor} border-dark-border hover:bg-${folderColor} hover:bg-opacity-5`}`}
+          ${
+            selectedFolderId === folder.id
+              ? `bg-${folderColor} text-black border-${folderColor}`
+              : `bg-dark-card text-${folderColor} border-dark-border hover:bg-${folderColor} hover:bg-opacity-5`
+          }`}
         role="button"
         tabIndex={0}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleFolderClick(folder.id); }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') handleFolderClick(folder.id);
+        }}
       >
         <div className="flex items-center min-w-0">
           <Folder size={16} className={`mr-2 text-${folderColor}`} />
           <span className="font-medium text-sm truncate">{folder.name}</span>
-          {isOnlineFolder && (
-            <span className="ml-2 text-xs px-1.5 py-0.5 bg-neon-pink bg-opacity-20 text-neon-pink rounded">
-              온라인
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-3 z-10">
           <span className="text-xs text-gray-400">{folder.count}개</span>
           {/* 폴더 삭제 버튼 (기본 폴더만 삭제 불가) */}
           {!isDefaultFolder && (
             <button
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleRemoveFolder(folder.id, folder.name, isOnlineFolder);
               }}
@@ -584,12 +673,11 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
             }`}
             onClick={() => setTab('favorites')}
           >
-            <Heart size={12} />
-            찜 영상 목록
+            <Heart size={12} />찜 영상 목록
           </button>
         </div>
       </div>
-      
+
       {/* 1. 찜 영상 목록 루트(목록 선택 화면)에서는 전체/랜덤 재생 버튼을 제거 */}
       {/* 2. 특정 찜 목록 상세 화면에서만 버튼 노출 */}
       {tab === 'favorites' && selectedFolderId && (
@@ -603,7 +691,9 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
               <ArrowLeft size={16} />
             </button>
             <h3 className="font-bold text-lg text-white">
-              {selectedFolderId === 'default' ? '기본 찜 목록' : folders.find(f => f.id === selectedFolderId)?.name}
+              {selectedFolderId === 'default'
+                ? '기본 찜 목록'
+                : folders.find((f) => f.id === selectedFolderId)?.name}
             </h3>
             <div className="w-8"></div>
           </div>
@@ -612,18 +702,70 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
             <div className="flex gap-1 mt-1 mb-2 justify-center items-center">
               <button
                 className="flex items-center gap-1 px-2 py-1 rounded bg-dark-card border border-neon-cyan/50 text-xs text-white hover:bg-neon-cyan/10 transition-colors"
-                onClick={() => onPlayAll && onPlayAll(favorites.map(f => f.video))}
+                onClick={() => onPlayAll && onPlayAll(favorites.map((f) => f.video))}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v18l15-9L5 3z" /></svg>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 1v6M17 1l-4 4m4-4l4 4M7 23v-6M7 23l4-4m-4 4l-4-4" /></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v18l15-9L5 3z"
+                  />
+                </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 1v6M17 1l-4 4m4-4l4 4M7 23v-6M7 23l4-4m-4 4l-4-4"
+                  />
+                </svg>
                 전체
               </button>
               <button
                 className="flex items-center gap-1 px-2 py-1 rounded bg-dark-card border border-neon-yellow/50 text-xs text-white hover:bg-neon-yellow/10 transition-colors"
-                onClick={() => onPlayRandom && onPlayRandom(favorites.map(f => f.video))}
+                onClick={() => onPlayRandom && onPlayRandom(favorites.map((f) => f.video))}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v18l15-9L5 3z" /></svg>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 3h5v5M8 21H3v-5m16.07-7.07L3.93 19.07" /></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 3v18l15-9L5 3z"
+                  />
+                </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3 h-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 3h5v5M8 21H3v-5m16.07-7.07L3.93 19.07"
+                  />
+                </svg>
                 랜덤
               </button>
             </div>
@@ -631,17 +773,30 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
         </>
       )}
 
-
       {/* 폴더 선택 모달 */}
-      {selectedVideo && (
+      {folderSelectorOpen && selectedFavoriteVideo && (
         <FolderSelector
           isOpen={folderSelectorOpen}
           onClose={() => {
             setFolderSelectorOpen(false);
+            setSelectedFavoriteId(null);
+            setSelectedFavoriteVideo(null);
             setSelectedVideo(null);
           }}
-          onSelect={handleFolderSelect}
-          video={selectedVideo}
+          onSelect={async (folderId?: string) => {
+            if (selectedFavoriteId) {
+              // 이동
+              await handleMoveToFolder(folderId);
+            } else if (selectedFavoriteVideo) {
+              // 찜 추가
+              await handleFolderSelect(folderId);
+            }
+            setFolderSelectorOpen(false);
+            setSelectedFavoriteId(null);
+            setSelectedFavoriteVideo(null);
+            setSelectedVideo(null);
+          }}
+          video={selectedFavoriteVideo}
         />
       )}
 
@@ -660,7 +815,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                   // 특정 찜 목록의 찜 영상들 보기
                   <>
                     {favorites.map((item, index) => renderListItem(item, index))}
-                    
+
                     {/* 온라인 공유 버튼 */}
                     {favorites.length > 0 && (
                       <div className="mt-2">
@@ -676,7 +831,9 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                           <div className="bg-dark-card border border-neon-yellow rounded-lg p-3 space-y-3">
                             <div className="flex items-center gap-2">
                               <Share2 size={16} className="text-neon-yellow" />
-                              <span className="font-medium text-sm text-neon-yellow">온라인 공유</span>
+                              <span className="font-medium text-sm text-neon-yellow">
+                                온라인 공유
+                              </span>
                             </div>
                             <input
                               type="text"
@@ -726,7 +883,9 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                   // 찜 목록들 보기 (기본 찜 목록 + 사용자 생성 찜 목록들)
                   <>
                     <div className="mb-1 px-3">
-                      <h3 className="font-medium text-sm text-gray-300">로딩할 찜 목록을 선택해 주세요</h3>
+                      <h3 className="font-medium text-sm text-gray-300">
+                        로딩할 찜 목록을 선택해 주세요
+                      </h3>
                     </div>
                     {/* 기본 찜 목록 */}
                     <button
@@ -738,12 +897,14 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                         <span className="font-medium text-sm">기본 찜 목록</span>
                       </div>
                       <span className="text-xs text-gray-400">
-                        {folders.find(f => f.name === '기본 폴더')?.count || 0}개
+                        {folders.find((f) => f.name === '기본 폴더')?.count || 0}개
                       </span>
                     </button>
                     {/* 사용자 생성 찜 목록들 */}
-                    {folders.filter(f => f.name !== '기본 폴더').map((folder, index) => renderFolderItem(folder, index))}
-                    
+                    {folders
+                      .filter((f) => f.name !== '기본 폴더')
+                      .map((folder, index) => renderFolderItem(folder, index))}
+
                     {/* 찜 목록 추가 영역 */}
                     {isAddingList ? (
                       <div className="flex items-center gap-2 py-2 px-3">
@@ -786,7 +947,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                           <Plus size={16} className="mr-2" />
                           <span className="font-medium text-sm">찜 목록 추가</span>
                         </button>
-                        
+
                         {/* 온라인 찜목록 가져오기 버튼 */}
                         <button
                           onClick={handleOnlineImportClick}
@@ -798,12 +959,10 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                         </button>
                       </>
                     )}
-                    
+
                     {/* 에러 메시지 */}
                     {addListError && (
-                      <div className="text-red-400 text-xs px-3 py-1">
-                        {addListError}
-                      </div>
+                      <div className="text-red-400 text-xs px-3 py-1">{addListError}</div>
                     )}
                   </>
                 )
@@ -815,37 +974,42 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
           )}
 
           {/* 빈 상태 표시 */}
-          {!loading && (
-            (tab === 'recent' && recents.length === 0) && (
+          {!loading &&
+            ((tab === 'recent' && recents.length === 0 && (
               <div className="text-center py-8">
                 <Clock size={48} className="mx-auto text-gray-400 mb-4 opacity-50" />
                 <div className="text-gray-400">최근 본 영상이 없습니다</div>
-                <div className="text-gray-500 text-sm mt-2">본 영상이 여기에 자동으로 추가됩니다</div>
+                <div className="text-gray-500 text-sm mt-2">
+                  본 영상이 여기에 자동으로 추가됩니다
+                </div>
               </div>
-            ) ||
-            (tab === 'favorites' && selectedFolderId && favorites.length === 0) && (
-              <div className="text-center py-8">
-                <Heart size={48} className="mx-auto text-gray-400 mb-4 opacity-50" />
-                <div className="text-gray-400">이 찜 목록에 영상이 없습니다</div>
-                <div className="text-gray-500 text-sm mt-2">하트 버튼을 눌러 찜 영상을 추가해 보세요</div>
-              </div>
-            ) ||
-            (tab === 'favorites' && !selectedFolderId && folders.length === 0) && (
-              <div className="text-center py-8">
-                                 <Folder size={48} className="mx-auto text-gray-400 mb-4 opacity-50" />
-                <div className="text-gray-400">찜 목록이 없습니다</div>
-                <div className="text-gray-500 text-sm mt-2">찜 목록 관리에서 새 목록을 만들어 보세요</div>
-              </div>
-            )
-          )}
+            )) ||
+              (tab === 'favorites' && selectedFolderId && favorites.length === 0 && (
+                <div className="text-center py-8">
+                  <Heart size={48} className="mx-auto text-gray-400 mb-4 opacity-50" />
+                  <div className="text-gray-400">이 찜 목록에 영상이 없습니다</div>
+                  <div className="text-gray-500 text-sm mt-2">
+                    하트 버튼을 눌러 찜 영상을 추가해 보세요
+                  </div>
+                </div>
+              )) ||
+              (tab === 'favorites' && !selectedFolderId && folders.length === 0 && (
+                <div className="text-center py-8">
+                  <Folder size={48} className="mx-auto text-gray-400 mb-4 opacity-50" />
+                  <div className="text-gray-400">찜 목록이 없습니다</div>
+                  <div className="text-gray-500 text-sm mt-2">
+                    찜 목록 관리에서 새 목록을 만들어 보세요
+                  </div>
+                </div>
+              )))}
         </div>
       </div>
 
       {/* 온라인 찜목록 가져오기 모달 */}
       {showOnlineModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-dark-card rounded-lg p-6 max-w-6xl w-full mx-2 border border-gray-600 max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-dark-card rounded-lg border border-gray-600 max-h-[80vh] flex flex-col w-full max-w-6xl mx-0 p-0">
+            <div className="flex items-center justify-between mb-2 px-4 pt-4 pb-2">
               <h3 className="text-lg font-bold text-white">온라인 찜목록 가져오기</h3>
               <button
                 onClick={handleOnlineModalClose}
@@ -854,11 +1018,11 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                 <X size={20} />
               </button>
             </div>
-            
-            <div className="flex-1 overflow-y-auto">
+
+            <div className="flex-1 overflow-y-auto px-0 pb-0">
               {selectedOnlineFolder ? (
                 // 선택된 폴더의 상세 내용 표시
-                <div className="space-y-4">
+                <div className="space-y-4 px-4 pb-4">
                   <div className="flex items-center gap-3 mb-4">
                     <button
                       onClick={handleBackToOnlineList}
@@ -874,13 +1038,13 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* 폴더 내 즐겨찾기 목록 */}
                   <div className="space-y-1 max-h-96 overflow-y-auto neon-scrollbar">
                     {selectedOnlineFolder.favorites.map((favorite, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-2 p-2 bg-dark-bg rounded-lg border border-gray-600"
+                        className="flex items-center gap-2 p-1 bg-dark-bg rounded-lg border border-gray-600"
                       >
                         <img
                           src={favorite.video.snippet?.thumbnails?.default?.url}
@@ -888,13 +1052,17 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                           className="w-12 h-12 rounded flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0 pr-1">
-                          <div className="text-white font-medium text-sm truncate leading-tight">{favorite.video.snippet?.title}</div>
-                          <div className="text-gray-400 text-xs truncate leading-tight mt-0.5">{favorite.video.snippet?.channelTitle}</div>
+                          <div className="text-white font-medium text-sm truncate leading-tight">
+                            {favorite.video.snippet?.title}
+                          </div>
+                          <div className="text-gray-400 text-xs truncate leading-tight mt-0.5">
+                            {favorite.video.snippet?.channelTitle}
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  
+
                   {/* 가져오기 버튼 */}
                   <div className="flex gap-3 pt-4 border-t border-gray-600">
                     <button
@@ -916,40 +1084,48 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                         )}
                       </span>
                       <span className="ml-2 min-w-[80px] text-center">
-                        {importLoading === selectedOnlineFolder.id ? "다운 중..." : "다운로드"}
+                        {importLoading === selectedOnlineFolder.id ? '다운 중...' : '다운로드'}
                       </span>
                     </button>
                   </div>
                 </div>
               ) : (
                 // 공유된 폴더 목록 표시
-                <div className="space-y-4">
+                <div className="space-y-2 max-h-96 overflow-y-auto px-2 pb-4">
                   {onlineLoading ? (
                     <div className="flex items-center justify-center py-8">
                       <LoadingSpinner />
                     </div>
                   ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <>
                       {sharedFolders.length > 0 ? (
                         sharedFolders.map((folder) => (
                           <div
                             key={folder.id}
-                            className="p-3 bg-dark-bg rounded-lg border border-gray-600 hover:border-neon-pink transition-colors cursor-pointer flex items-center justify-between gap-2"
+                            className="bg-dark-bg rounded-lg border border-gray-600 hover:border-neon-pink transition-colors cursor-pointer flex items-center justify-between gap-1 p-2 w-full"
                             onClick={() => handleOnlineFolderClick(folder)}
                           >
                             <div className="flex-1 min-w-0">
                               <h4 className="text-white font-medium truncate">{folder.title}</h4>
-                              <p className="text-gray-400 text-sm mt-1 line-clamp-2">{folder.description}</p>
+                              <p className="text-gray-400 text-sm mt-1 line-clamp-2">
+                                {folder.description}
+                              </p>
                               <div className="flex items-center mt-2 text-xs text-gray-500">
-                                <span className="flex-1 text-left mx-1">작성자: {folder.authorName}</span>
-                                <span className="flex-1 text-center mx-1">{folder.favoriteCount}개 항목</span>
-                                <span className="flex-1 text-right mx-1">다운로드: {folder.downloadCount}회</span>
+                                <span className="flex-1 text-left mx-1">
+                                  작성자: {folder.authorName}
+                                </span>
+                                <span className="flex-1 text-center mx-1">
+                                  {folder.favoriteCount}개 항목
+                                </span>
+                                <span className="flex-1 text-right mx-1">
+                                  다운로드: {folder.downloadCount}회
+                                </span>
                               </div>
                             </div>
                             {/* 내가 작성한 폴더에만 삭제 버튼 노출 */}
                             {user && folder.authorId === user.uid && (
                               <button
-                                onClick={e => {
+                                onClick={(e) => {
                                   e.stopPropagation();
                                   handleRemoveSharedFolder(folder);
                                 }}
@@ -960,7 +1136,10 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                                 <Trash2 size={16} />
                               </button>
                             )}
-                            <ArrowLeft className="rotate-180 text-gray-400 flex-shrink-0" size={16} />
+                            <ArrowLeft
+                              className="rotate-180 text-gray-400 flex-shrink-0"
+                              size={16}
+                            />
                           </div>
                         ))
                       ) : (
@@ -968,7 +1147,7 @@ const ListBox: React.FC<ListBoxProps> = ({ onSelect, recentUpdateTrigger, onPlay
                           공유된 찜목록이 없습니다.
                         </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               )}

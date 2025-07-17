@@ -1,9 +1,29 @@
 import React, { ReactNode, useEffect, useState, useCallback } from 'react';
 import FolderList from './FolderList';
-import { ChevronDown, Music, Play, ArrowLeft, Plus, Edit3, Trash2, Check, X, Download, Share2, Upload, Search } from 'lucide-react';
+import {
+  ChevronDown,
+  Music,
+  Play,
+  ArrowLeft,
+  Plus,
+  Edit3,
+  Trash2,
+  Check,
+  X,
+  Download,
+  Share2,
+  Upload,
+  Search,
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getFolders, FolderItem } from '../../services/foldersService';
-import { getFavoritesByFolder, removeFavorite, moveFavoriteToFolder, getFavoritesForPlaylist, getFolderBundle } from '../../services/favoritesService';
+import {
+  getFavoritesByFolder,
+  removeFavorite,
+  moveFavoriteToFolder,
+  getFavoritesForPlaylist,
+  getFolderBundle,
+} from '../../services/favoritesService';
 import { shareFolder } from '../../services/sharedFavoritesService';
 import SharedFavoritesList from './SharedFavoritesList';
 import { FavoriteItem } from '../../types/youtube';
@@ -27,7 +47,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [favoritesList, setFavoritesList] = useState<FavoriteItem[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  
+
   // 공유 관련 상태
   const [sharingView, setSharingView] = useState<'upload' | 'browse'>('browse');
   const [shareTitle, setShareTitle] = useState('');
@@ -35,7 +55,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   const [shareTags, setShareTags] = useState('');
   const [shareLoading, setShareLoading] = useState(false);
   const [shareSelectedFolder, setShareSelectedFolder] = useState<string>('');
-  
+
   const { user } = useAuth();
 
   // 폴더 목록 로드
@@ -50,19 +70,22 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   }, [user]);
 
   // 폴더별 즐겨찾기 로드
-  const loadFavorites = useCallback(async (folderId?: string) => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const favorites = await getFavoritesByFolder(folderId);
-      setFavoritesList(favorites);
-    } catch (error) {
-      console.error('즐겨찾기 로딩 실패:', error);
-      setFavoritesList([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  const loadFavorites = useCallback(
+    async (folderId?: string) => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const favorites = await getFavoritesByFolder(folderId);
+        setFavoritesList(favorites);
+      } catch (error) {
+        console.error('즐겨찾기 로딩 실패:', error);
+        setFavoritesList([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user],
+  );
 
   // 즐겨찾기 삭제
   const handleDeleteFavorite = async (favoriteId: string) => {
@@ -99,24 +122,25 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
       alert('장착할 즐겨찾기가 없습니다.');
       return;
     }
-    
+
     try {
       const playlistFavorites = await getFavoritesForPlaylist(
-        detailView === 'default' ? undefined : detailView
+        detailView === 'default' ? undefined : detailView,
       );
-      
+
       // TODO: 실제 플레이어와 연동하여 재생목록에 추가
       // 현재는 콘솔 로그와 알림으로 기능 확인
-      const folderName = detailView === 'default' ? '기본 폴더' : folders.find(f => f.id === detailView)?.name;
+      const folderName =
+        detailView === 'default' ? '기본 폴더' : folders.find((f) => f.id === detailView)?.name;
       alert(`"${folderName}"의 ${playlistFavorites.length}개 즐겨찾기를 재생목록에 추가했습니다.`);
       console.log('바로 장착:', {
         folderId: detailView,
         folderName,
-        playlist: playlistFavorites.map(item => ({
+        playlist: playlistFavorites.map((item) => ({
           id: item.video.id,
           title: item.video.snippet?.title,
-          channelTitle: item.video.snippet?.channelTitle
-        }))
+          channelTitle: item.video.snippet?.channelTitle,
+        })),
       });
     } catch (error) {
       console.error('바로 장착 실패:', error);
@@ -127,28 +151,28 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   // 바로 공유 기능
   const handleQuickShare = async () => {
     if (!detailView) return;
-    
+
     try {
-      const folderBundle = await getFolderBundle(
-        detailView === 'default' ? undefined : detailView
-      );
-      
+      const folderBundle = await getFolderBundle(detailView === 'default' ? undefined : detailView);
+
       if (!folderBundle.folderInfo || folderBundle.favorites.length === 0) {
         alert('공유할 즐겨찾기가 없습니다.');
         return;
       }
-      
+
       // TODO: 실제 공유 시스템과 연동
       // 현재는 콘솔 로그와 알림으로 기능 확인
-      alert(`"${folderBundle.folderInfo.name}" 폴더(${folderBundle.favorites.length}개 항목)를 공유 목록에 업로드했습니다.`);
+      alert(
+        `"${folderBundle.folderInfo.name}" 폴더(${folderBundle.favorites.length}개 항목)를 공유 목록에 업로드했습니다.`,
+      );
       console.log('바로 공유:', {
         folderInfo: folderBundle.folderInfo,
-        sharedItems: folderBundle.favorites.map(item => ({
+        sharedItems: folderBundle.favorites.map((item) => ({
           id: item.video.id,
           title: item.video.snippet?.title,
           channelTitle: item.video.snippet?.channelTitle,
-          addedAt: item.createdAt
-        }))
+          addedAt: item.createdAt,
+        })),
       });
     } catch (error) {
       console.error('바로 공유 실패:', error);
@@ -167,7 +191,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
     try {
       // 선택된 폴더의 즐겨찾기 가져오기
       const folderBundle = await getFolderBundle(
-        shareSelectedFolder === 'default' ? undefined : shareSelectedFolder
+        shareSelectedFolder === 'default' ? undefined : shareSelectedFolder,
       );
 
       if (!folderBundle.favorites || folderBundle.favorites.length === 0) {
@@ -178,26 +202,26 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
       // 태그 처리
       const tags = shareTags
         .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
 
       // 폴더 공유
       const sharedId = await shareFolder(
         shareTitle,
         shareDescription,
         tags,
-        folderBundle.favorites
+        folderBundle.favorites,
       );
 
       alert(`"${shareTitle}" 폴더가 성공적으로 공유되었습니다!`);
-      
+
       // 입력 필드 초기화
       setShareTitle('');
       setShareDescription('');
       setShareTags('');
       setShareSelectedFolder('');
       setSharingView('browse');
-      
+
       console.log('폴더 공유 완료:', { sharedId, title: shareTitle });
     } catch (error) {
       console.error('폴더 공유 실패:', error);
@@ -240,7 +264,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
         }
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
@@ -250,7 +274,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   const tabs = [
     { id: 'folder' as TabType, label: '폴더관리', color: 'neon-cyan' },
     { id: 'selection' as TabType, label: '즐겨찾기 편집', color: 'neon-pink' },
-    { id: 'sharing' as TabType, label: '공유', color: 'neon-yellow' }
+    { id: 'sharing' as TabType, label: '공유', color: 'neon-yellow' },
   ];
 
   const renderTabContent = () => {
@@ -278,10 +302,13 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                       <ArrowLeft size={20} />
                     </button>
                     <h3 className="text-neon-pink font-bold text-lg">
-                      {detailView === 'default' ? '기본 폴더' : folders.find(f => f.id === detailView)?.name} 즐겨찾기
+                      {detailView === 'default'
+                        ? '기본 폴더'
+                        : folders.find((f) => f.id === detailView)?.name}{' '}
+                      즐겨찾기
                     </h3>
                   </div>
-                  
+
                   {/* 바로 기능 버튼들 */}
                   <div className="flex items-center gap-2">
                     <button
@@ -321,8 +348,12 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                           <div className="flex items-center gap-2 flex-1">
                             <Music size={14} className="text-neon-pink" />
                             <div className="flex-1 leading-tight">
-                              <div className="text-white font-medium text-xs">{favorite.video.snippet?.title || '제목 없음'}</div>
-                              <div className="text-gray-400 text-xs leading-none">{favorite.video.snippet?.channelTitle || '채널 없음'}</div>
+                              <div className="text-white font-medium text-xs">
+                                {favorite.video.snippet?.title || '제목 없음'}
+                              </div>
+                              <div className="text-gray-400 text-xs leading-none">
+                                {favorite.video.snippet?.channelTitle || '채널 없음'}
+                              </div>
                             </div>
                           </div>
 
@@ -356,17 +387,18 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                     className="w-full bg-dark-bg border border-neon-pink text-white px-4 py-2 rounded-lg flex items-center justify-between hover:border-pink-300 transition-all duration-300"
                   >
                     <span className={selectedFolder ? 'text-white' : 'text-gray-400'}>
-                      {selectedFolder 
-                        ? (selectedFolder === 'default' ? '기본 폴더' : folders.find(f => f.id === selectedFolder)?.name)
-                        : '폴더를 선택하세요'
-                      }
+                      {selectedFolder
+                        ? selectedFolder === 'default'
+                          ? '기본 폴더'
+                          : folders.find((f) => f.id === selectedFolder)?.name
+                        : '폴더를 선택하세요'}
                     </span>
-                    <ChevronDown 
-                      size={16} 
+                    <ChevronDown
+                      size={16}
                       className={`transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`}
                     />
                   </button>
-                  
+
                   {isDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-dark-card border border-neon-pink rounded-lg shadow-neon-pink max-h-40 overflow-y-auto">
                       {/* 기본 폴더 */}
@@ -379,7 +411,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                       >
                         기본 폴더
                       </button>
-                      
+
                       {/* 사용자 폴더들 */}
                       {folders.map((folder) => (
                         <button
@@ -409,7 +441,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                         <ArrowLeft size={12} className="rotate-180" />
                       </button>
                     </div>
-                    
+
                     {loading ? (
                       <div className="flex items-center justify-center py-4">
                         <LoadingSpinner />
@@ -425,8 +457,12 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                               <div className="flex items-center gap-2 flex-1">
                                 <Music size={14} className="text-neon-pink" />
                                 <div className="flex-1 leading-tight">
-                                  <div className="text-white font-medium text-xs">{favorite.video.snippet?.title || '제목 없음'}</div>
-                                  <div className="text-gray-400 text-xs leading-none">{favorite.video.snippet?.channelTitle || '채널 없음'}</div>
+                                  <div className="text-white font-medium text-xs">
+                                    {favorite.video.snippet?.title || '제목 없음'}
+                                  </div>
+                                  <div className="text-gray-400 text-xs leading-none">
+                                    {favorite.video.snippet?.channelTitle || '채널 없음'}
+                                  </div>
                                 </div>
                               </div>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -489,7 +525,7 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
               // 폴더 공유 업로드
               <div className="space-y-4">
                 <h3 className="text-neon-yellow font-bold text-lg">내 폴더 공유하기</h3>
-                
+
                 {/* 폴더 선택 */}
                 <div className="space-y-2">
                   <label className="block text-white font-medium text-sm">공유할 폴더</label>
@@ -533,7 +569,9 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                     rows={3}
                     maxLength={200}
                   />
-                  <div className="text-xs text-gray-400 text-right">{shareDescription.length}/200</div>
+                  <div className="text-xs text-gray-400 text-right">
+                    {shareDescription.length}/200
+                  </div>
                 </div>
 
                 {/* 태그 입력 */}
@@ -594,16 +632,16 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
         >
           ×
         </button>
-        
+
         <div className="mb-6">
           <h2 className="text-white font-bold text-xl mb-4">즐겨찾기 관리</h2>
-          
+
           {/* 탭 네비게이션 */}
           <div className="flex border-b border-gray-600">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               let activeClasses = '';
-              
+
               if (isActive) {
                 switch (tab.color) {
                   case 'neon-cyan':
@@ -617,15 +655,13 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                     break;
                 }
               }
-              
+
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 font-medium transition-all duration-300 border-b-2 ${
-                    isActive
-                      ? activeClasses
-                      : 'text-gray-400 border-transparent hover:text-white'
+                    isActive ? activeClasses : 'text-gray-400 border-transparent hover:text-white'
                   }`}
                 >
                   {tab.label}
@@ -670,4 +706,4 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   );
 };
 
-export default Modal; 
+export default Modal;

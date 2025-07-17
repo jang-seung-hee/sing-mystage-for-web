@@ -9,7 +9,10 @@ const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const getStreamUrlFunction = httpsCallable(functions, 'getStreamUrl');
 const karaokeSearchFunction = httpsCallable(functions, 'karaokeSearch');
 
-export async function searchYouTube(query: string, maxResults: number = 50): Promise<YouTubeSearchResults> {
+export async function searchYouTube(
+  query: string,
+  maxResults: number = 50,
+): Promise<YouTubeSearchResults> {
   const res = await axios.get(`${YOUTUBE_API_BASE}/search`, {
     params: {
       part: 'snippet',
@@ -38,7 +41,6 @@ export async function searchKaraoke(query: string, maxResults = 50): Promise<You
 
     // 성공 플래그가 false이거나 items가 없는 경우
     throw new Error(data.error || 'Firebase Functions에서 검색 결과를 반환하지 않았습니다');
-
   } catch (error: any) {
     // Firebase Functions 에러 처리
     if (error.code === 'functions/unauthenticated') {
@@ -48,7 +50,9 @@ export async function searchKaraoke(query: string, maxResults = 50): Promise<You
     } else if (error.code === 'functions/deadline-exceeded') {
       throw new Error('검색 요청 시간이 초과되었습니다. 다시 시도해주세요');
     } else if (error.code === 'functions/unavailable') {
-      throw new Error('노래방 검색 서비스가 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요');
+      throw new Error(
+        '노래방 검색 서비스가 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요',
+      );
     } else if (error.message) {
       // Firebase Functions에서 전달된 커스텀 에러 메시지 (한국어)
       throw new Error(error.message);
@@ -62,7 +66,7 @@ export async function searchKaraoke(query: string, maxResults = 50): Promise<You
 
 /**
  * YouTube 비디오 ID로부터 스트림 URL을 추출합니다
- * Firebase Functions를 통해 ytdl-core로 처리됩니다
+ * Firebase Functions를 통해 youtubei.js로 처리됩니다
  */
 export async function getAdFreeStreamUrl(videoId: string): Promise<string> {
   try {
@@ -76,7 +80,6 @@ export async function getAdFreeStreamUrl(videoId: string): Promise<string> {
 
     // 성공 플래그가 false이거나 streamUrl이 없는 경우
     throw new Error(data.error || 'Firebase Functions에서 스트림 URL을 반환하지 않았습니다');
-
   } catch (error: any) {
     // Firebase Functions 에러 처리
     if (error.code === 'functions/unauthenticated') {

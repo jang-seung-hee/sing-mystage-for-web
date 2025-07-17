@@ -12,12 +12,7 @@ interface FolderSelectorProps {
   video: YouTubeSearchResultItem;
 }
 
-const FolderSelector: React.FC<FolderSelectorProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSelect, 
-  video 
-}) => {
+const FolderSelector: React.FC<FolderSelectorProps> = ({ isOpen, onClose, onSelect, video }) => {
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -61,10 +56,7 @@ const FolderSelector: React.FC<FolderSelectorProps> = ({
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white text-lg font-semibold">폴더 선택</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -107,9 +99,7 @@ const FolderSelector: React.FC<FolderSelectorProps> = ({
                   <Folder size={16} className="text-neon-pink" />
                   <div>
                     <div className="text-white font-medium">{folder.name}</div>
-                    <div className="text-gray-400 text-sm">
-                      {folder.count || 0}개 항목
-                    </div>
+                    <div className="text-gray-400 text-sm">{folder.count || 0}개 항목</div>
                   </div>
                 </button>
               ))}
@@ -141,4 +131,4 @@ const FolderSelector: React.FC<FolderSelectorProps> = ({
   );
 };
 
-export default FolderSelector; 
+export default FolderSelector;

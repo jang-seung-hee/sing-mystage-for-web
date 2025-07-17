@@ -11,7 +11,12 @@ interface FavoritesListProps {
   playlist?: any[];
 }
 
-const FavoritesList: React.FC<FavoritesListProps> = ({ onPlayAll, onPlayRandom, currentIndex, playlist }) => {
+const FavoritesList: React.FC<FavoritesListProps> = ({
+  onPlayAll,
+  onPlayRandom,
+  currentIndex,
+  playlist,
+}) => {
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +48,12 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ onPlayAll, onPlayRandom, 
 
   // 현재 재생 곡 videoId 추출
   let playingId: string | null = null;
-  if (typeof currentIndex === 'number' && playlist && playlist.length > 0 && playlist[currentIndex]) {
+  if (
+    typeof currentIndex === 'number' &&
+    playlist &&
+    playlist.length > 0 &&
+    playlist[currentIndex]
+  ) {
     playingId = playlist[currentIndex]?.video?.id || playlist[currentIndex]?.id?.videoId || null;
   }
 
@@ -57,13 +67,13 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ onPlayAll, onPlayRandom, 
       <div className="flex gap-2 mb-3">
         <button
           className="px-3 py-1 rounded bg-neon-cyan text-white font-semibold shadow hover:bg-neon-pink transition-colors"
-          onClick={() => onPlayAll && onPlayAll(favorites)}
+          onClick={() => onPlayAll && onPlayAll(favorites.map((f) => f.video))}
         >
           전체 재생
         </button>
         <button
           className="px-3 py-1 rounded bg-neon-yellow text-black font-semibold shadow hover:bg-neon-pink transition-colors"
-          onClick={() => onPlayRandom && onPlayRandom(favorites)}
+          onClick={() => onPlayRandom && onPlayRandom(favorites.map((f) => f.video))}
         >
           랜덤 재생
         </button>

@@ -18,6 +18,9 @@ export const db = getFirestore(app);
 export const functions = getFunctions(app, 'asia-northeast3'); // 한국 리전 사용
 
 // 개발 환경에서 Functions Emulator 연결 (선택사항)
-if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_FUNCTIONS_EMULATOR === 'true') {
+if (
+  process.env.NODE_ENV === 'development' &&
+  process.env.REACT_APP_USE_FUNCTIONS_EMULATOR === 'true'
+) {
   connectFunctionsEmulator(functions, 'localhost', 5001);
 }

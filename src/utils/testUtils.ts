@@ -33,25 +33,25 @@ export const TEST_VIDEO_IDS = {
     'kJQP7kiw5Fk', // Luis Fonsi - Despacito
     'fJ9rUzIMcZQ', // Queen - Bohemian Rhapsody
     'YQHsXMglC9A', // Adele - Hello
-    'pRpeEdMmmQ0'  // Shakira - Waka Waka
+    'pRpeEdMmmQ0', // Shakira - Waka Waka
   ],
   // 한국 K-pop
   kpop: [
     'DDfCDBLk6ys', // BTS - Dynamite (일반적으로 안정적)
     'gdZLi9oWNZg', // BLACKPINK 관련
-    'ZzBt7RdBINc'  // Wonder Girls
+    'ZzBt7RdBINc', // Wonder Girls
   ],
   // 클래식/오케스트라
   classical: [
     'jGflUbPQfW8', // Beethoven's 9th Symphony
-    'hKRUPYrAQoE'  // Mozart
+    'hKRUPYrAQoE', // Mozart
   ],
   // 잘못된/문제가 있는 비디오 ID (에러 테스트용)
   invalid: [
-    'invalid123',   // 잘못된 형식
-    'aaaaaaaaaaa',  // 존재하지 않음
-    '12345678901'   // 잘못된 길이
-  ]
+    'invalid123', // 잘못된 형식
+    'aaaaaaaaaaa', // 존재하지 않음
+    '12345678901', // 잘못된 길이
+  ],
 };
 
 export interface TestResult {
@@ -80,11 +80,11 @@ export interface TestSummary {
 export async function testHealthCheck(): Promise<any> {
   console.log('🏥 헬스체크 테스트 시작...');
   const startTime = Date.now();
-  
+
   try {
     const result = await healthCheckFunction();
     const responseTime = Date.now() - startTime;
-    
+
     console.log(`✅ 헬스체크 성공 (${responseTime}ms):`, result.data);
     return { success: true, responseTime, data: result.data };
   } catch (error) {
@@ -100,11 +100,11 @@ export async function testHealthCheck(): Promise<any> {
 export async function testGetMetrics(): Promise<any> {
   console.log('📊 메트릭 조회 테스트 시작...');
   const startTime = Date.now();
-  
+
   try {
     const result = await getMetricsFunction();
     const responseTime = Date.now() - startTime;
-    
+
     console.log(`✅ 메트릭 조회 성공 (${responseTime}ms):`, result.data);
     return { success: true, responseTime, data: result.data };
   } catch (error) {
@@ -119,28 +119,28 @@ export async function testGetMetrics(): Promise<any> {
  */
 export async function testSingleVideo(videoId: string): Promise<TestResult> {
   const startTime = Date.now();
-  
+
   try {
     const streamUrl = await getAdFreeStreamUrl(videoId);
     const responseTime = Date.now() - startTime;
-    
+
     console.log(`✅ ${videoId} 성공 (${responseTime}ms)`);
-    
+
     return {
       videoId,
       success: true,
       responseTime,
-      streamUrl
+      streamUrl,
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
     console.error(`❌ ${videoId} 실패 (${responseTime}ms):`, getErrorMessage(error));
-    
+
     return {
       videoId,
       success: false,
       responseTime,
-      error: getErrorMessage(error)
+      error: getErrorMessage(error),
     };
   }
 }
@@ -150,28 +150,28 @@ export async function testSingleVideo(videoId: string): Promise<TestResult> {
  */
 export async function testMultipleVideos(videoIds: string[]): Promise<TestSummary> {
   console.log(`🎬 ${videoIds.length}개 비디오 배치 테스트 시작...`);
-  
+
   const results: TestResult[] = [];
-  
+
   // 순차 테스트 (Rate Limiting 고려)
   for (const videoId of videoIds) {
     const result = await testSingleVideo(videoId);
     results.push(result);
-    
+
     // Rate Limiting 방지를 위한 지연
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  
+
   // 통계 계산
-  const successCount = results.filter(r => r.success).length;
+  const successCount = results.filter((r) => r.success).length;
   const failureCount = results.length - successCount;
   const successRate = (successCount / results.length) * 100;
-  
-  const responseTimes = results.map(r => r.responseTime);
+
+  const responseTimes = results.map((r) => r.responseTime);
   const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
   const minResponseTime = Math.min(...responseTimes);
   const maxResponseTime = Math.max(...responseTimes);
-  
+
   const summary: TestSummary = {
     totalTests: results.length,
     successCount,
@@ -180,9 +180,9 @@ export async function testMultipleVideos(videoIds: string[]): Promise<TestSummar
     averageResponseTime,
     minResponseTime,
     maxResponseTime,
-    results
+    results,
   };
-  
+
   console.log(`📊 배치 테스트 결과:`, summary);
   return summary;
 }
@@ -190,22 +190,25 @@ export async function testMultipleVideos(videoIds: string[]): Promise<TestSummar
 /**
  * 동시 요청 성능 테스트
  */
-export async function testConcurrentRequests(videoIds: string[], concurrency: number = 3): Promise<TestSummary> {
+export async function testConcurrentRequests(
+  videoIds: string[],
+  concurrency: number = 3,
+): Promise<TestSummary> {
   console.log(`⚡ ${concurrency}개 동시 요청 성능 테스트 시작...`);
-  
-  const promises = videoIds.slice(0, concurrency).map(videoId => testSingleVideo(videoId));
+
+  const promises = videoIds.slice(0, concurrency).map((videoId) => testSingleVideo(videoId));
   const results = await Promise.all(promises);
-  
+
   // 통계 계산
-  const successCount = results.filter(r => r.success).length;
+  const successCount = results.filter((r) => r.success).length;
   const failureCount = results.length - successCount;
   const successRate = (successCount / results.length) * 100;
-  
-  const responseTimes = results.map(r => r.responseTime);
+
+  const responseTimes = results.map((r) => r.responseTime);
   const averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
   const minResponseTime = Math.min(...responseTimes);
   const maxResponseTime = Math.max(...responseTimes);
-  
+
   const summary: TestSummary = {
     totalTests: results.length,
     successCount,
@@ -214,9 +217,9 @@ export async function testConcurrentRequests(videoIds: string[], concurrency: nu
     averageResponseTime,
     minResponseTime,
     maxResponseTime,
-    results
+    results,
   };
-  
+
   console.log(`📊 동시 요청 테스트 결과:`, summary);
   return summary;
 }
@@ -226,7 +229,7 @@ export async function testConcurrentRequests(videoIds: string[], concurrency: nu
  */
 export async function testErrorScenarios(): Promise<TestSummary> {
   console.log('🚫 에러 시나리오 테스트 시작...');
-  
+
   return await testMultipleVideos(TEST_VIDEO_IDS.invalid);
 }
 
@@ -248,43 +251,44 @@ export async function runComprehensiveTest(): Promise<{
   };
 }> {
   console.log('🔍 포괄적인 통합 테스트 시작...');
-  
+
   try {
     // 1. 헬스체크 및 메트릭 테스트
     const healthCheck = await testHealthCheck();
     const metrics = await testGetMetrics();
-    
+
     // 2. 카테고리별 테스트
     const musicTest = await testMultipleVideos(TEST_VIDEO_IDS.music);
     const kpopTest = await testMultipleVideos(TEST_VIDEO_IDS.kpop);
     const classicalTest = await testMultipleVideos(TEST_VIDEO_IDS.classical);
-    
+
     // 3. 에러 시나리오 테스트
     const errorTest = await testErrorScenarios();
-    
+
     // 4. 동시 요청 테스트
     const concurrentTest = await testConcurrentRequests(TEST_VIDEO_IDS.music, 3);
-    
+
     // 전체 통계 계산
     const allTests = [musicTest, kpopTest, classicalTest];
     const totalTests = allTests.reduce((sum, test) => sum + test.totalTests, 0);
     const totalSuccess = allTests.reduce((sum, test) => sum + test.successCount, 0);
     const successRate = (totalSuccess / totalTests) * 100;
-    
-    const allResponseTimes = allTests.flatMap(test => 
-      test.results.filter(r => r.success).map(r => r.responseTime)
+
+    const allResponseTimes = allTests.flatMap((test) =>
+      test.results.filter((r) => r.success).map((r) => r.responseTime),
     );
-    const averageResponseTime = allResponseTimes.reduce((a, b) => a + b, 0) / allResponseTimes.length;
-    
+    const averageResponseTime =
+      allResponseTimes.reduce((a, b) => a + b, 0) / allResponseTimes.length;
+
     const overallSummary = {
       totalTests,
       successRate,
-      averageResponseTime
+      averageResponseTime,
     };
-    
+
     console.log('🎉 포괄적인 통합 테스트 완료!');
     console.log('📊 전체 요약:', overallSummary);
-    
+
     return {
       healthCheck,
       metrics,
@@ -293,7 +297,7 @@ export async function runComprehensiveTest(): Promise<{
       classicalTest,
       errorTest,
       concurrentTest,
-      overallSummary
+      overallSummary,
     };
   } catch (error) {
     console.error('❌ 통합 테스트 중 오류 발생:', error);
@@ -315,13 +319,13 @@ export function printTestReport(summary: TestSummary, title: string) {
   console.log(`최소 응답시간: ${summary.minResponseTime}ms`);
   console.log(`최대 응답시간: ${summary.maxResponseTime}ms`);
   console.log('='.repeat(50));
-  
+
   // 실패한 케이스 상세 정보
-  const failures = summary.results.filter(r => !r.success);
+  const failures = summary.results.filter((r) => !r.success);
   if (failures.length > 0) {
     console.log('\n❌ 실패한 테스트:');
-    failures.forEach(failure => {
+    failures.forEach((failure) => {
       console.log(`  - ${failure.videoId}: ${failure.error}`);
     });
   }
-} 
+}

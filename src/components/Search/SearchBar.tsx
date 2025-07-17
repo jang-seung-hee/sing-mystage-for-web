@@ -7,7 +7,7 @@ interface SearchBarProps {
 
 const SEARCH_TYPES = [
   { value: 'all', label: '일반검색' },
-  { value: 'video', label: '노래방' },
+  // { value: 'video', label: '노래방' }, // 노래방 검색 비활성화: 옵션 제거
 ];
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
@@ -21,12 +21,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedType = e.target.value;
-    if (selectedType === 'video') {
-      alert('준비중인 기능입니다');
-      setType('all');
-    } else {
-      setType(selectedType);
-    }
+    setType(selectedType); // 노래방 선택 시 alert 및 자동 전환 제거
   };
 
   return (
@@ -43,10 +38,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             className="w-full bg-dark-bg border border-dark-border text-white p-2 pr-8 rounded-lg focus:border-neon-cyan focus:shadow-glow-md outline-none transition-all duration-300 placeholder-gray-400"
             required
           />
-                  <Search
-          size={16}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-        />
+          <Search
+            size={16}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
         </div>
 
         {/* 검색 타입 선택 드롭다운 */}
