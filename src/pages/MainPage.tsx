@@ -129,6 +129,7 @@ const MainPage: React.FC = () => {
       });
     } catch (e) {
       // 집계 실패는 무시 (용량 최적화 목적)
+      console.log('recordUsage 실패 (무시됨):', e);
     }
   }
 
@@ -184,9 +185,17 @@ const MainPage: React.FC = () => {
         await addRecent(item);
         setRecentUpdateTrigger((prev) => prev + 1);
       }
-      const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
-      setStreamUrl(url);
-      setAdFree(true);
+      
+      // youtube.js 사용 중지 (일시적)
+      // const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
+      // setStreamUrl(url);
+      // setAdFree(true);
+      
+      // 바로 iframe으로 설정 (에러 없이)
+      setStreamUrl(
+        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
+      );
+      setAdFree(false);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);
       setStreamUrl(

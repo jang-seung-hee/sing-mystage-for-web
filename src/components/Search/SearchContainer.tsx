@@ -63,9 +63,15 @@ const SearchContainer: React.FC = () => {
     setAdFree(false);
     try {
       await addRecent(item);
-      const url = await getAdFreeStreamUrl(item.id.videoId || item.id);
-      setStreamUrl(url);
-      setAdFree(true);
+      
+      // youtube.js 사용 중지 (일시적)
+      // const url = await getAdFreeStreamUrl(item.id.videoId || item.id);
+      // setStreamUrl(url);
+      // setAdFree(true);
+      
+      // 바로 iframe으로 설정 (에러 없이)
+      setStreamUrl(`https://www.youtube.com/embed/${item.id.videoId || item.id}`);
+      setAdFree(false);
     } catch (err) {
       setStreamUrl(`https://www.youtube.com/embed/${item.id.videoId || item.id}`);
       setAdFree(false);
