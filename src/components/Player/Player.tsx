@@ -398,7 +398,7 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
         <div className="flex items-center justify-center h-full bg-dark-card rounded-lg">
           <div className="text-center space-y-4">
             <Play size={48} className="text-neon-cyan mx-auto animate-pulse-glow" />
-            <div className="text-gray-400">스트림 URL을 기다리는 중...</div>
+            <div className="text-gray-400">영상을 준비하는 중...</div>
           </div>
         </div>
       );
