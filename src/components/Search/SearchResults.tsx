@@ -6,6 +6,7 @@ import { Play, Music, Heart } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getFavorites, addFavorite, removeFavorite } from '../../services/favoritesService';
 import FolderSelector from '../Favorites/FolderSelector';
+import { formatDisplayText } from '../../utils/htmlUtils';
 
 interface SearchResultsProps {
   results: YouTubeSearchResultItem[];
@@ -153,9 +154,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
                 {/* 정보 영역 */}
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-white leading-tight mb-0.5 group-hover:text-neon-cyan transition-colors duration-300 line-clamp-2">
-                    {item.snippet?.title}
+                    {formatDisplayText(item.snippet?.title)}
                   </div>
-                  <div className="text-sm text-gray-400 truncate">{item.snippet?.channelTitle}</div>
+                  <div className="text-sm text-gray-400 truncate">{formatDisplayText(item.snippet?.channelTitle)}</div>
                 </div>
 
                 {/* 찜하기 버튼 */}

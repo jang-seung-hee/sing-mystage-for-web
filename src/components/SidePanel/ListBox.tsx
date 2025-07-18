@@ -36,6 +36,7 @@ import {
 } from '../../services/sharedFavoritesService';
 import LoadingSpinner from '../Common/LoadingSpinner';
 import { YouTubeSearchResultItem } from '../../types/youtube';
+import { formatDisplayText } from '../../utils/htmlUtils';
 
 import FolderSelector from '../Favorites/FolderSelector';
 
@@ -508,8 +509,8 @@ const ListBox: React.FC<ListBoxProps> = ({
   const renderListItem = (item: ListItem, index: number) => {
     const videoId = typeof item.video.id === 'string' ? item.video.id : item.video.id.videoId;
     const isFavorited = favoriteIds.has(videoId);
-    const title = item.video.snippet?.title || '제목 없음';
-    const channelTitle = item.video.snippet?.channelTitle || '채널 없음';
+    const title = formatDisplayText(item.video.snippet?.title) || '제목 없음';
+    const channelTitle = formatDisplayText(item.video.snippet?.channelTitle) || '채널 없음';
 
     const gradientBg =
       tab === 'recent'
@@ -1019,9 +1020,9 @@ const ListBox: React.FC<ListBoxProps> = ({
                       <ArrowLeft size={16} />
                     </button>
                     <div>
-                      <h4 className="text-white font-bold text-lg">{selectedOnlineFolder.title}</h4>
+                      <h4 className="text-white font-bold text-lg">{formatDisplayText(selectedOnlineFolder.title)}</h4>
                       <p className="text-gray-400 text-sm">
-                        {selectedOnlineFolder.authorName} • {selectedOnlineFolder.favoriteCount}개 항목
+                        {formatDisplayText(selectedOnlineFolder.authorName)} • {selectedOnlineFolder.favoriteCount}개 항목
                       </p>
                     </div>
                   </div>
@@ -1040,10 +1041,10 @@ const ListBox: React.FC<ListBoxProps> = ({
                         />
                         <div className="flex-1 min-w-0 pr-1">
                           <div className="text-white font-medium text-sm truncate leading-tight">
-                            {favorite.video.snippet?.title}
+                            {formatDisplayText(favorite.video.snippet?.title)}
                           </div>
                           <div className="text-gray-400 text-xs truncate leading-tight mt-0.5">
-                            {favorite.video.snippet?.channelTitle}
+                            {formatDisplayText(favorite.video.snippet?.channelTitle)}
                           </div>
                         </div>
                       </div>
@@ -1093,13 +1094,13 @@ const ListBox: React.FC<ListBoxProps> = ({
                             onClick={() => handleOnlineFolderClick(folder)}
                           >
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium truncate">{folder.title}</h4>
+                              <h4 className="text-white font-medium truncate">{formatDisplayText(folder.title)}</h4>
                               <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                                {folder.description}
+                                {formatDisplayText(folder.description)}
                               </p>
                               <div className="flex items-center mt-2 text-xs text-gray-500">
                                 <span className="flex-1 text-left mx-1">
-                                  작성자: {folder.authorName}
+                                  작성자: {formatDisplayText(folder.authorName)}
                                 </span>
                                 <span className="flex-1 text-center mx-1">
                                   {folder.favoriteCount}개 항목

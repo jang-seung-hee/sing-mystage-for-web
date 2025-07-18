@@ -28,6 +28,7 @@ import { shareFolder } from '../../services/sharedFavoritesService';
 import SharedFavoritesList from './SharedFavoritesList';
 import { FavoriteItem } from '../../types/youtube';
 import LoadingSpinner from '../Common/LoadingSpinner';
+import { formatDisplayText } from '../../utils/htmlUtils';
 
 interface ModalProps {
   open: boolean;
@@ -349,10 +350,10 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                             <Music size={14} className="text-neon-pink" />
                             <div className="flex-1 leading-tight">
                               <div className="text-white font-medium text-xs">
-                                {favorite.video.snippet?.title || '제목 없음'}
+                                {formatDisplayText(favorite.video.snippet?.title) || '제목 없음'}
                               </div>
                               <div className="text-gray-400 text-xs leading-none">
-                                {favorite.video.snippet?.channelTitle || '채널 없음'}
+                                {formatDisplayText(favorite.video.snippet?.channelTitle) || '채널 없음'}
                               </div>
                             </div>
                           </div>
@@ -458,10 +459,10 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
                                 <Music size={14} className="text-neon-pink" />
                                 <div className="flex-1 leading-tight">
                                   <div className="text-white font-medium text-xs">
-                                    {favorite.video.snippet?.title || '제목 없음'}
+                                    {formatDisplayText(favorite.video.snippet?.title) || '제목 없음'}
                                   </div>
                                   <div className="text-gray-400 text-xs leading-none">
-                                    {favorite.video.snippet?.channelTitle || '채널 없음'}
+                                    {formatDisplayText(favorite.video.snippet?.channelTitle) || '채널 없음'}
                                   </div>
                                 </div>
                               </div>
