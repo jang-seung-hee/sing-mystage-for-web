@@ -516,8 +516,20 @@ exports.karaokeSearch = onCall(
 const functions = require('firebase-functions');
 exports.recordUsage = functions.https.onRequest(async (req, res) => {
   try {
-    // CORS 허용
-    res.set('Access-Control-Allow-Origin', '*');
+    // CORS 허용 - 허용된 도메인 목록
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://sing-mystage-for-web.netlify.app',
+      'https://sing-mystage-for-web.firebaseapp.com',
+      'https://sing-mystage-for-web.web.app'
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.set('Access-Control-Allow-Origin', origin);
+    }
+    
     if (req.method === 'OPTIONS') {
       res.set('Access-Control-Allow-Methods', 'POST');
       res.set('Access-Control-Allow-Headers', 'Content-Type');

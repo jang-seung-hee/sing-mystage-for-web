@@ -6,6 +6,7 @@ import { Play, Music, Heart } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { getFavorites, addFavorite, removeFavorite } from '../../services/favoritesService';
 import FolderSelector from '../Favorites/FolderSelector';
+import { formatDisplayText } from '../../utils/htmlUtils';
 
 interface SearchResultsProps {
   results: YouTubeSearchResultItem[];
@@ -109,9 +110,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
   }
 
   return (
-    <div className="space-y-3">
+    <div className="h-full flex flex-col">
       {/* 검색 결과 리스트 */}
-      <div className="space-y-2 max-h-[13rem] sm:max-h-[15.5rem] overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 p-2">
         {results.map((item, index) => {
           const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
           const isFavorited = favoriteIds.has(videoId);
@@ -153,9 +154,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({ results, onSelect, loadin
                 {/* 정보 영역 */}
                 <div className="flex-1 min-w-0">
                   <div className="font-bold text-white leading-tight mb-0.5 group-hover:text-neon-cyan transition-colors duration-300 line-clamp-2">
-                    {item.snippet?.title}
+                    {formatDisplayText(item.snippet?.title)}
                   </div>
-                  <div className="text-sm text-gray-400 truncate">{item.snippet?.channelTitle}</div>
+                  <div className="text-sm text-gray-400 truncate">{formatDisplayText(item.snippet?.channelTitle)}</div>
                 </div>
 
                 {/* 찜하기 버튼 */}

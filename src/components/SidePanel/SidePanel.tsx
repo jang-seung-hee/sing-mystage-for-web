@@ -5,7 +5,10 @@ import SearchBox from './SearchBox';
 import SearchResultBox from './SearchResultBox';
 import ControlBox from './ControlBox';
 import ListBox from './ListBox';
-import { YouTubeSearchResultItem } from '../../types/youtube';
+import ResizeHandler from '../Common/ResizeHandler';
+import VerticalResizeHandler from '../Common/VerticalResizeHandler';
+import { getSidebarWidth, saveSidebarWidth, getSearchAreaHeight, saveSearchAreaHeight } from '../../services/layoutSettingsService';
+
 
 interface SidePanelProps {
   results: any[];
@@ -34,11 +37,27 @@ const SidePanel: React.FC<SidePanelProps> = ({
 }) => {
   // 모바일 환경 감지
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(360);
+  const [searchAreaHeight, setSearchAreaHeight] = useState(197);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 저장된 사이드바 너비 불러오기
+  useEffect(() => {
+    if (!isMobile) {
+      const savedWidth = getSidebarWidth();
+      setSidebarWidth(savedWidth);
+    }
+  }, [isMobile]);
+
+  // 저장된 검색 영역 높이 불러오기
+  useEffect(() => {
+    const savedHeight = getSearchAreaHeight();
+    setSearchAreaHeight(savedHeight);
   }, []);
 
   // 스와이프 핸들러
@@ -51,6 +70,18 @@ const SidePanel: React.FC<SidePanelProps> = ({
     },
     trackTouch: true,
   });
+
+  // 리사이즈 핸들러
+  const handleResize = (newWidth: number) => {
+    setSidebarWidth(newWidth);
+    saveSidebarWidth(newWidth);
+  };
+
+  // 검색 영역 높이 리사이즈 핸들러
+  const handleSearchAreaResize = (newHeight: number) => {
+    setSearchAreaHeight(newHeight);
+    saveSearchAreaHeight(newHeight);
+  };
 
   return (
     <>
@@ -73,11 +104,16 @@ const SidePanel: React.FC<SidePanelProps> = ({
       <aside
         {...(isMobile ? swipeHandlers : {})}
         className={`
-      w-[360px] max-w-full h-full bg-dark-bg border-r border-dark-border flex flex-col 
+      h-full bg-dark-bg border-r border-dark-border flex flex-col 
       transition-transform duration-300 ease-in-out
       fixed lg:relative z-40
       ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
     `}
+        style={{ 
+          width: isMobile ? '100vw' : `${sidebarWidth}px`,
+          maxWidth: isMobile ? '100vw' : '600px',
+          minWidth: isMobile ? '100vw' : '280px'
+        }}
       >
         <ProfileBox />
         {/* 버튼 그룹을 로고 바로 아래로, 더 아래로 내리고 전체 폭을 채우도록 조정 */}
@@ -87,8 +123,8 @@ const SidePanel: React.FC<SidePanelProps> = ({
         {/* 버튼과 검색창 사이에 간격 */}
         <div className="h-2" />
         <SearchBox onSearch={onSearch} />
-        {/* 고정 높이 영역: 검색결과 */}
-        <div style={{ maxHeight: 197 }} className="flex flex-col">
+        {/* 검색결과 영역 */}
+        <div style={{ height: searchAreaHeight }} className="flex flex-col">
           <SearchResultBox
             results={results}
             loading={loading}
@@ -96,6 +132,16 @@ const SidePanel: React.FC<SidePanelProps> = ({
             onSelect={(item) => onSelect(item, 'recent')}
           />
         </div>
+        
+        {/* 수직 리사이즈 핸들러 */}
+        <VerticalResizeHandler
+          onResize={handleSearchAreaResize}
+          minHeight={150}
+          maxHeight={400}
+          initialHeight={197}
+          currentHeight={searchAreaHeight}
+        />
+        
         {/* 가변 영역: 리스트 */}
         <div className="flex-1 min-h-0 flex flex-col">
           <ListBox
@@ -105,6 +151,17 @@ const SidePanel: React.FC<SidePanelProps> = ({
             onPlayRandom={onPlayRandom}
           />
         </div>
+
+        {/* 리사이즈 핸들러 (데스크톱에서만 표시) */}
+        {!isMobile && (
+          <ResizeHandler
+            onResize={handleResize}
+            minWidth={280}
+            maxWidth={600}
+            initialWidth={360}
+            currentWidth={sidebarWidth}
+          />
+        )}
       </aside>
     </>
   );

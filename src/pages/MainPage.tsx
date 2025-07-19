@@ -49,27 +49,35 @@ const MainPage: React.FC = () => {
     let skipNextPop = false;
 
     const handlePopState = (e: PopStateEvent) => {
+      alert('PopState 이벤트 발생! sidebarOpen: ' + sidebarOpen + ', isToggleButton: ' + isToggleButtonRef.current);
+      
       // 토글 버튼으로 인한 상태 변경인 경우 무시
       if (isToggleButtonRef.current) {
+        alert('토글 버튼으로 인한 변경 - 무시');
         isToggleButtonRef.current = false;
         return;
       }
 
       if (!sidebarOpen) {
+        alert('사이드바가 닫혀있음 - 사이드바 열기');
         setSidebarOpen(true);
         skipNextPop = true;
         // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
         window.history.pushState(null, '', window.location.href);
       } else if (skipNextPop) {
+        alert('첫 popstate 무시');
         // 첫 popstate는 사이드바 오픈용이므로 무시
         skipNextPop = false;
       } else {
+        alert('사이드바가 열려있음 - 확인 다이얼로그 표시');
         // 사이드바 열려있을 때는 확인 다이얼로그 표시
         const shouldExit = window.confirm('앱을 종료하시겠습니까?');
         if (shouldExit) {
+          alert('사용자가 확인 - 앱 종료');
           // 사용자가 확인을 누르면 앱 종료
           window.history.back();
         } else {
+          alert('사용자가 취소 - 현재 상태 유지');
           // 사용자가 취소를 누르면 현재 상태 유지
           window.history.pushState(null, '', window.location.href);
         }

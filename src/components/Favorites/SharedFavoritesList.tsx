@@ -9,6 +9,7 @@ import {
 import { addFavorite } from '../../services/favoritesService';
 import { useAuth } from '../../hooks/useAuth';
 import LoadingSpinner from '../Common/LoadingSpinner';
+import { formatDisplayText } from '../../utils/htmlUtils';
 
 interface SharedFavoritesListProps {
   onClose: () => void;
@@ -173,7 +174,7 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
           </div>
 
           {selectedFolder.description && (
-            <p className="text-white text-sm">{selectedFolder.description}</p>
+            <p className="text-white text-sm">{formatDisplayText(selectedFolder.description)}</p>
           )}
 
           {selectedFolder.tags.length > 0 && (
@@ -212,10 +213,10 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-white font-medium text-sm truncate">
-                    {favorite.video.snippet?.title || '제목 없음'}
+                    {formatDisplayText(favorite.video.snippet?.title) || '제목 없음'}
                   </div>
                   <div className="text-gray-400 text-xs truncate">
-                    {favorite.video.snippet?.channelTitle || '채널 없음'}
+                    {formatDisplayText(favorite.video.snippet?.channelTitle) || '채널 없음'}
                   </div>
                 </div>
               </div>
@@ -290,7 +291,7 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
               >
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="text-white font-medium text-sm group-hover:text-neon-yellow transition-colors duration-300">
-                    {folder.title}
+                    {formatDisplayText(folder.title)}
                   </h4>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
@@ -305,7 +306,7 @@ const SharedFavoritesList: React.FC<SharedFavoritesListProps> = ({ onClose }) =>
                 </div>
 
                 {folder.description && (
-                  <p className="text-gray-400 text-xs mb-2 line-clamp-2">{folder.description}</p>
+                  <p className="text-gray-400 text-xs mb-2 line-clamp-2">{formatDisplayText(folder.description)}</p>
                 )}
 
                 <div className="flex items-center justify-between">
