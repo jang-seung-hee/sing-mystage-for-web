@@ -1,4 +1,4 @@
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { useState, Suspense, useEffect, useRef } from 'react';
 import { Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { searchYouTube, getAdFreeStreamUrl } from '../services/youtubeApi';
 import { addRecent } from '../services/recentService';
@@ -15,6 +15,7 @@ const MainPage: React.FC = () => {
 
   // 사이드바 토글 상태 (모바일: 기본 열림, 데스크톱: 기본 열림)
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isToggleButtonRef = useRef(false);
 
   // 검색/선택/영상 상태 관리
   const [results, setResults] = useState<YouTubeSearchResultItem[]>([]);
@@ -39,6 +40,55 @@ const MainPage: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // 모바일 뒤로가기 버튼으로 사이드 패널 열기/닫기 제어
+  useEffect(() => {
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobile) return;
+
+    let skipNextPop = false;
+
+    const handlePopState = (e: PopStateEvent) => {
+      // 토글 버튼으로 인한 상태 변경인 경우 무시
+      if (isToggleButtonRef.current) {
+        isToggleButtonRef.current = false;
+        return;
+      }
+
+      if (!sidebarOpen) {
+        setSidebarOpen(true);
+        skipNextPop = true;
+        // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
+        window.history.pushState(null, '', window.location.href);
+      } else if (skipNextPop) {
+        // 첫 popstate는 사이드바 오픈용이므로 무시
+        skipNextPop = false;
+      } else {
+        // 사이드바 열려있을 때는 확인 다이얼로그 표시
+        const shouldExit = window.confirm('앱을 종료하시겠습니까?');
+        if (shouldExit) {
+          // 사용자가 확인을 누르면 앱 종료
+          window.history.back();
+        } else {
+          // 사용자가 취소를 누르면 현재 상태 유지
+          window.history.pushState(null, '', window.location.href);
+        }
+      }
+    };
+
+    // 토글 버튼으로 인한 상태 변경이 아닌 경우에만 history state 관리
+    if (!isToggleButtonRef.current) {
+      if (!sidebarOpen) {
+        window.history.pushState({ sidebar: 'open' }, '');
+      }
+    }
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // cleanup 함수에서 history.back() 제거 - 이 부분이 앱 종료를 일으키는 원인
+    };
+  }, [sidebarOpen]);
 
   // 조건부 렌더링 처리
   // 로딩 중이면 로딩 스피너 표시
@@ -67,12 +117,14 @@ const MainPage: React.FC = () => {
 
   // 사이드바 토글 함수
   const toggleSidebar = () => {
+    isToggleButtonRef.current = true;
     setSidebarOpen(!sidebarOpen);
   };
 
   // 오버레이 클릭 시 사이드바 닫기 (모바일)
   const closeSidebarOnOverlay = () => {
     if (window.innerWidth < 1024) {
+      isToggleButtonRef.current = true;
       setSidebarOpen(false);
     }
   };
@@ -94,6 +146,7 @@ const MainPage: React.FC = () => {
       });
     } catch (e) {
       // 집계 실패는 무시 (용량 최적화 목적)
+      console.log('recordUsage 실패 (무시됨):', e);
     }
   }
 
@@ -141,6 +194,7 @@ const MainPage: React.FC = () => {
     setStreamUrl(null);
     setAdFree(false);
     if (window.innerWidth < 1024) {
+      isToggleButtonRef.current = true;
       setSidebarOpen(false);
     }
     try {
@@ -149,9 +203,17 @@ const MainPage: React.FC = () => {
         await addRecent(item);
         setRecentUpdateTrigger((prev) => prev + 1);
       }
-      const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
-      setStreamUrl(url);
-      setAdFree(true);
+      
+      // youtube.js 사용 중지 (일시적)
+      // const url = await getAdFreeStreamUrl(typeof item.id === 'string' ? item.id : item.id.videoId);
+      // setStreamUrl(url);
+      // setAdFree(true);
+      
+      // 바로 iframe으로 설정 (에러 없이)
+      setStreamUrl(
+        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
+      );
+      setAdFree(false);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);
       setStreamUrl(
@@ -190,26 +252,33 @@ const MainPage: React.FC = () => {
   return (
     <div className="flex h-screen bg-gradient-karaoke relative">
       {/* 햄버거 메뉴 버튼 */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed bottom-4 right-4 p-1.5 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95 flex items-center justify-center"
-        aria-label="메뉴 토글"
-        style={{ minWidth: 29, minHeight: 29, zIndex: 9999 }}
-      >
-        <span className={`relative flex items-center justify-center`}>
-          {sidebarOpen ? (
-            <>
-              <ChevronLeft size={17} className="drop-shadow-[0_0_6px_#00fff7] animate-glow-left" />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-l from-neon-cyan/60 to-transparent blur-md animate-glow-left" />
-            </>
-          ) : (
-            <>
-              <ChevronRight size={17} className="drop-shadow-[0_0_6px_#ff00ea] animate-glow-right" />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-neon-pink/60 to-transparent blur-md animate-glow-right" />
-            </>
-          )}
-        </span>
-      </button>
+      {(() => {
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isPortrait = isMobile && window.matchMedia('(orientation: portrait)').matches;
+        if (!isMobile || !isPortrait) return null;
+        return (
+          <button
+            onClick={toggleSidebar}
+            className="fixed bottom-4 right-4 p-1.5 bg-dark-card hover:bg-gray-700 text-white rounded-lg shadow-neon-cyan transition-all duration-300 hover:shadow-glow-md lg:hidden touch-manipulation active:scale-95 flex items-center justify-center"
+            aria-label="메뉴 토글"
+            style={{ minWidth: 29, minHeight: 29, zIndex: 9999 }}
+          >
+            <span className={`relative flex items-center justify-center`}>
+              {sidebarOpen ? (
+                <>
+                  <ChevronLeft size={17} className="drop-shadow-[0_0_6px_#00fff7] animate-glow-left" />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-l from-neon-cyan/60 to-transparent blur-md animate-glow-left" />
+                </>
+              ) : (
+                <>
+                  <ChevronRight size={17} className="drop-shadow-[0_0_6px_#ff00ea] animate-glow-right" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gradient-to-r from-neon-pink/60 to-transparent blur-md animate-glow-right" />
+                </>
+              )}
+            </span>
+          </button>
+        );
+      })()}
 
       {/* 모바일 오버레이 */}
       {sidebarOpen && (
