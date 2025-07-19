@@ -3,6 +3,7 @@ import Player, { PlayerRef } from '../Player/Player';
 import { YouTubeSearchResultItem } from '../../types/youtube';
 import { Music } from 'lucide-react';
 import { Expand, Minimize } from 'lucide-react';
+import ScreenLockToggle from '../Common/ScreenLockToggle';
 
 interface VideoAreaProps {
   selected?: YouTubeSearchResultItem | null;
@@ -31,8 +32,11 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
   ) => {
     // 훅은 항상 컴포넌트 최상단에서 호출
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isScreenLocked, setIsScreenLocked] = useState(false);
     const hideBtnTimeout = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
 
     // 전체화면 상태 감지 및 모바일 대응(useEffect 통합)
     useEffect(() => {
@@ -94,6 +98,88 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
           (document as any).mozCancelFullScreen();
         } else if ((document as any).msExitFullscreen) {
           (document as any).msExitFullscreen();
+        }
+      }
+    };
+
+    // 재생 상태 변경 핸들러
+    const handlePlayStateChange = (playing: boolean) => {
+      setIsPlaying(playing);
+      if (onPlayStateChange) {
+        onPlayStateChange(playing);
+      }
+    };
+
+    // 화면 잠금 상태 변경 핸들러
+    const handleScreenLockChange = (locked: boolean) => {
+      setIsScreenLocked(locked);
+      
+      // 화면 잠금 시 터치 이벤트 차단
+      if (locked) {
+        // 전체 body 터치 차단
+        document.body.style.pointerEvents = 'none';
+        document.body.style.userSelect = 'none';
+        
+        // iframe 내부도 터치 차단 (YouTube UI 포함)
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+          iframe.style.pointerEvents = 'none';
+          iframe.style.userSelect = 'none';
+          iframe.style.touchAction = 'none';
+        });
+        
+        // 비디오 컨테이너만 터치 허용 (재생/일시정지 등 기본 컨트롤)
+        const videoContainer = document.querySelector('.video-container');
+        if (videoContainer) {
+          (videoContainer as HTMLElement).style.pointerEvents = 'auto';
+          (videoContainer as HTMLElement).style.userSelect = 'auto';
+        }
+        
+        // 화면 잠금 토글 버튼은 항상 터치 허용
+        const lockButton = document.querySelector('[data-screen-lock-toggle]');
+        if (lockButton) {
+          (lockButton as HTMLElement).style.pointerEvents = 'auto';
+          (lockButton as HTMLElement).style.userSelect = 'auto';
+        }
+        
+        // 잠금 토글 버튼의 부모 컨테이너도 터치 허용
+        const lockButtonContainer = lockButton?.closest('.fixed');
+        if (lockButtonContainer) {
+          (lockButtonContainer as HTMLElement).style.pointerEvents = 'auto';
+          (lockButtonContainer as HTMLElement).style.userSelect = 'auto';
+        }
+      } else {
+        // 잠금 해제 시 모든 터치 이벤트 복원
+        document.body.style.pointerEvents = '';
+        document.body.style.userSelect = '';
+        
+        // iframe 터치 이벤트 복원
+        const iframes = document.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+          iframe.style.pointerEvents = '';
+          iframe.style.userSelect = '';
+          iframe.style.touchAction = '';
+        });
+        
+        // 비디오 컨테이너 스타일 복원
+        const videoContainer = document.querySelector('.video-container');
+        if (videoContainer) {
+          (videoContainer as HTMLElement).style.pointerEvents = '';
+          (videoContainer as HTMLElement).style.userSelect = '';
+        }
+        
+        // 화면 잠금 토글 버튼 스타일 복원
+        const lockButton = document.querySelector('[data-screen-lock-toggle]');
+        if (lockButton) {
+          (lockButton as HTMLElement).style.pointerEvents = '';
+          (lockButton as HTMLElement).style.userSelect = '';
+        }
+        
+        // 잠금 토글 버튼의 부모 컨테이너 스타일 복원
+        const lockButtonContainer = lockButton?.closest('.fixed');
+        if (lockButtonContainer) {
+          (lockButtonContainer as HTMLElement).style.pointerEvents = '';
+          (lockButtonContainer as HTMLElement).style.userSelect = '';
         }
       }
     };
@@ -209,11 +295,30 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
               streamUrl={streamUrl || null}
               title={currentItem.snippet?.title || ''}
               onTimeUpdate={onTimeUpdate}
-              onPlayStateChange={onPlayStateChange}
+              onPlayStateChange={handlePlayStateChange}
               onEnded={onEnded}
             />
+            
+            {/* 화면 잠금 시 iframe 위에 투명 오버레이 */}
+            {isScreenLocked && !adFree && (
+              <div
+                ref={overlayRef}
+                className="absolute inset-0 z-20 bg-transparent"
+                style={{ 
+                  pointerEvents: 'auto',
+                  touchAction: 'none'
+                }}
+              />
+            )}
           </div>
         </div>
+
+        {/* 화면 잠금 토글 버튼 */}
+        <ScreenLockToggle
+          isPlaying={isPlaying}
+          onLockChange={handleScreenLockChange}
+          isLocked={isScreenLocked}
+        />
       </div>
     );
   },
