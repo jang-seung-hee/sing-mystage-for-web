@@ -75,6 +75,12 @@ const MainPage: React.FC = () => {
         // setPopStateEvent('패널이 닫혀있음 - 열기');
         // 패널이 닫혀있으면 열기
         setSidebarOpen(true);
+        // 뒤로가기로 패널을 열었음을 표시하는 플래그 설정
+        isToggleButtonRef.current = true;
+        // 플래그를 100ms 후에 리셋
+        setTimeout(() => {
+          isToggleButtonRef.current = false;
+        }, 100);
         // 다음 뒤로가기를 위해 history state 추가
         setTimeout(() => {
           window.history.pushState(null, '', window.location.href);
