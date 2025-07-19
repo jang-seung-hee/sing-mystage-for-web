@@ -41,50 +41,70 @@ const MainPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 뒤로가기 버튼 클릭 모니터링 상태 (배포 시 주석 처리)
+  // const [backButtonClicked, setBackButtonClicked] = useState(false);
+  // const [popStateEvent, setPopStateEvent] = useState('');
+
   // 모바일 뒤로가기 버튼으로 사이드 패널 열기/닫기 제어
   useEffect(() => {
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!isMobile) return;
 
-    let skipNextPop = false;
-
     const handlePopState = (e: PopStateEvent) => {
+      // 뒤로가기 버튼 클릭 모니터링 (배포 시 주석 처리)
+      // setBackButtonClicked(true);
+      // setPopStateEvent('popstate 이벤트 발생!');
+      
+      // 3초 후 모니터링 상태 초기화 (배포 시 주석 처리)
+      // setTimeout(() => {
+      //   setBackButtonClicked(false);
+      //   setPopStateEvent('');
+      // }, 3000);
+
       // 토글 버튼으로 인한 상태 변경인 경우 무시
       if (isToggleButtonRef.current) {
+        // setPopStateEvent('토글 버튼으로 인한 변경 - 무시');
         isToggleButtonRef.current = false;
         return;
       }
 
-      if (!sidebarOpen) {
+      // 실시간으로 현재 사이드바 상태 확인
+      const currentSidebarOpen = document.querySelector('aside')?.classList.contains('translate-x-0') || false;
+      
+      if (!currentSidebarOpen) {
+        // setPopStateEvent('패널이 닫혀있음 - 열기');
+        // 패널이 닫혀있으면 열기
         setSidebarOpen(true);
-        skipNextPop = true;
-        // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
-        window.history.pushState(null, '', window.location.href);
-      } else if (skipNextPop) {
-        // 첫 popstate는 사이드바 오픈용이므로 무시
-        skipNextPop = false;
+        // 다음 뒤로가기를 위해 history state 추가
+        setTimeout(() => {
+          window.history.pushState(null, '', window.location.href);
+        }, 100);
       } else {
-        // 사이드바 열려있을 때는 확인 다이얼로그 표시
+        // setPopStateEvent('패널이 열려있음 - 질문');
+        // 패널이 열려있으면 질문하고 닫기
         const shouldExit = window.confirm('앱을 종료하시겠습니까?');
         if (shouldExit) {
+          // setPopStateEvent('사용자 확인 - 앱 종료');
           // 사용자가 확인을 누르면 앱 종료
           window.history.back();
         } else {
+          // setPopStateEvent('사용자 취소 - 상태 유지');
           // 사용자가 취소를 누르면 현재 상태 유지
-          window.history.pushState(null, '', window.location.href);
+          setTimeout(() => {
+            window.history.pushState(null, '', window.location.href);
+          }, 100);
         }
       }
     };
 
-    if (!sidebarOpen) {
-      window.history.pushState({ sidebar: 'open' }, '');
-    }
+    // 뒤로가기 버튼이 작동하도록 history state 추가
+    window.history.pushState(null, '', window.location.href);
     window.addEventListener('popstate', handlePopState);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [sidebarOpen]);
+  }, []); // 의존성 배열을 빈 배열로 변경
 
   // 조건부 렌더링 처리
   // 로딩 중이면 로딩 스피너 표시
@@ -115,6 +135,10 @@ const MainPage: React.FC = () => {
   const toggleSidebar = () => {
     isToggleButtonRef.current = true;
     setSidebarOpen(!sidebarOpen);
+    // 상태 변경 후 토글 플래그 초기화
+    setTimeout(() => {
+      isToggleButtonRef.current = false;
+    }, 100);
   };
 
   // 오버레이 클릭 시 사이드바 닫기 (모바일)
@@ -122,6 +146,10 @@ const MainPage: React.FC = () => {
     if (window.innerWidth < 1024) {
       isToggleButtonRef.current = true;
       setSidebarOpen(false);
+      // 상태 변경 후 토글 플래그 초기화
+      setTimeout(() => {
+        isToggleButtonRef.current = false;
+      }, 100);
     }
   };
 
@@ -192,6 +220,10 @@ const MainPage: React.FC = () => {
     if (window.innerWidth < 1024) {
       isToggleButtonRef.current = true;
       setSidebarOpen(false);
+      // 상태 변경 후 토글 플래그 초기화
+      setTimeout(() => {
+        isToggleButtonRef.current = false;
+      }, 100);
     }
     try {
       // 최근본 영상 탭에서만 addRecent 및 트리거
@@ -247,6 +279,19 @@ const MainPage: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-gradient-karaoke relative">
+      {/* 실시간 상태 디버깅 (배포 시 주석 처리) */}
+      {/* <div className="fixed top-4 left-4 z-50 bg-black bg-opacity-80 text-white p-2 rounded text-xs">
+        <div>sidebarOpen: {sidebarOpen.toString()}</div>
+        <div>isToggleButton: {isToggleButtonRef.current.toString()}</div>
+        <div>DOM 상태: {document.querySelector('aside')?.classList.contains('translate-x-0')?.toString() || 'unknown'}</div>
+        <div className="mt-2 border-t border-white pt-1">
+          <div className="font-bold">뒤로가기 모니터링:</div>
+          <div className={backButtonClicked ? 'text-yellow-400' : 'text-gray-400'}>
+            {backButtonClicked ? '뒤로가기 버튼 클릭됨!' : '뒤로가기 버튼 대기 중...'}
+          </div>
+          <div className="text-xs text-blue-300">{popStateEvent}</div>
+        </div>
+      </div> */}
       {/* 햄버거 메뉴 버튼 */}
       {(() => {
         const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
