@@ -44,7 +44,12 @@ const MainPage: React.FC = () => {
   // 모바일 뒤로가기 버튼으로 사이드 패널 열기/닫기 제어
   useEffect(() => {
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (!isMobile) return;
+    alert('useEffect 실행됨! isMobile: ' + isMobile + ', sidebarOpen: ' + sidebarOpen);
+    
+    if (!isMobile) {
+      alert('모바일이 아님 - useEffect 종료');
+      return;
+    }
 
     let skipNextPop = false;
 
@@ -91,6 +96,7 @@ const MainPage: React.FC = () => {
       }
     }
     window.addEventListener('popstate', handlePopState);
+    alert('popstate 이벤트 리스너 등록됨!');
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
