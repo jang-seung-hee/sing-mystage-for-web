@@ -108,4 +108,4 @@ const VerticalResizeHandler: React.FC<VerticalResizeHandlerProps> = ({
   );
 };
 
-export default VerticalResizeHandler; 
+export default VerticalResizeHandler;

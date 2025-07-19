@@ -1,4 +1,4 @@
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { useState, Suspense, useEffect, useRef } from 'react';
 import { Menu, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { searchYouTube, getAdFreeStreamUrl } from '../services/youtubeApi';
 import { addRecent } from '../services/recentService';
@@ -15,6 +15,7 @@ const MainPage: React.FC = () => {
 
   // 사이드바 토글 상태 (모바일: 기본 열림, 데스크톱: 기본 열림)
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const isToggleButtonRef = useRef(false);
 
   // 검색/선택/영상 상태 관리
   const [results, setResults] = useState<YouTubeSearchResultItem[]>([]);
@@ -48,7 +49,14 @@ const MainPage: React.FC = () => {
     let skipNextPop = false;
 
     const handlePopState = (e: PopStateEvent) => {
+      // 토글 버튼으로 인한 상태 변경인 경우 무시
+      if (isToggleButtonRef.current) {
+        isToggleButtonRef.current = false;
+        return;
+      }
+
       if (!sidebarOpen) {
+        // 사이드바가 닫혀있을 때 뒤로 버튼을 누르면 사이드바 열기
         setSidebarOpen(true);
         skipNextPop = true;
         // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
@@ -57,12 +65,23 @@ const MainPage: React.FC = () => {
         // 첫 popstate는 사이드바 오픈용이므로 무시
         skipNextPop = false;
       } else {
-        // 사이드바 열려있을 때는 원래대로 동작(앱 종료/이전 페이지)
+        // 사이드바 열려있을 때는 확인 다이얼로그 표시
+        const shouldExit = window.confirm('앱을 종료하시겠습니까?');
+        if (shouldExit) {
+          // 사용자가 확인을 누르면 앱 종료
+          window.history.back();
+        } else {
+          // 사용자가 취소를 누르면 현재 상태 유지
+          window.history.pushState(null, '', window.location.href);
+        }
       }
     };
 
-    if (!sidebarOpen) {
-      window.history.pushState({ sidebar: 'open' }, '');
+    // 토글 버튼으로 인한 상태 변경이 아닌 경우에만 history state 관리
+    if (!isToggleButtonRef.current) {
+      if (!sidebarOpen) {
+        window.history.pushState({ sidebar: 'open' }, '');
+      }
     }
     window.addEventListener('popstate', handlePopState);
 
@@ -102,12 +121,14 @@ const MainPage: React.FC = () => {
 
   // 사이드바 토글 함수
   const toggleSidebar = () => {
+    isToggleButtonRef.current = true;
     setSidebarOpen(!sidebarOpen);
   };
 
   // 오버레이 클릭 시 사이드바 닫기 (모바일)
   const closeSidebarOnOverlay = () => {
     if (window.innerWidth < 1024) {
+      isToggleButtonRef.current = true;
       setSidebarOpen(false);
     }
   };
@@ -177,6 +198,7 @@ const MainPage: React.FC = () => {
     setStreamUrl(null);
     setAdFree(false);
     if (window.innerWidth < 1024) {
+      isToggleButtonRef.current = true;
       setSidebarOpen(false);
     }
     try {
