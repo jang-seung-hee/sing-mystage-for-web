@@ -41,60 +41,48 @@ const MainPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // PWA에서 뒤로가기 버튼 처리
+  // 모바일 뒤로가기 버튼으로 사이드 패널 열기/닫기 제어
   useEffect(() => {
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isPWA = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
-    
-    alert('useEffect 실행됨! isMobile: ' + isMobile + ', isPWA: ' + isPWA + ', sidebarOpen: ' + sidebarOpen);
-    
-    if (!isMobile) {
-      alert('모바일이 아님 - useEffect 종료');
-      return;
-    }
+    if (!isMobile) return;
 
-    // PWA에서 뒤로가기 버튼 처리
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      alert('beforeunload 이벤트 발생! sidebarOpen: ' + sidebarOpen);
-      
+    let skipNextPop = false;
+
+    const handlePopState = (e: PopStateEvent) => {
       // 토글 버튼으로 인한 상태 변경인 경우 무시
       if (isToggleButtonRef.current) {
-        alert('토글 버튼으로 인한 변경 - 무시');
         isToggleButtonRef.current = false;
         return;
       }
 
-      // 사이드바가 열려있을 때만 확인 다이얼로그 표시
-      if (sidebarOpen) {
-        alert('사이드바가 열려있음 - 확인 다이얼로그 표시');
-        const message = '앱을 종료하시겠습니까?';
-        e.preventDefault();
-        e.returnValue = message;
-        return message;
-      } else {
-        alert('사이드바가 닫혀있음 - 사이드바 열기');
-        // 사이드바가 닫혀있으면 열기
+      if (!sidebarOpen) {
         setSidebarOpen(true);
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
+        skipNextPop = true;
+        // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
+        window.history.pushState(null, '', window.location.href);
+      } else if (skipNextPop) {
+        // 첫 popstate는 사이드바 오픈용이므로 무시
+        skipNextPop = false;
+      } else {
+        // 사이드바 열려있을 때는 확인 다이얼로그 표시
+        const shouldExit = window.confirm('앱을 종료하시겠습니까?');
+        if (shouldExit) {
+          // 사용자가 확인을 누르면 앱 종료
+          window.history.back();
+        } else {
+          // 사용자가 취소를 누르면 현재 상태 유지
+          window.history.pushState(null, '', window.location.href);
+        }
       }
     };
 
-    // PWA에서 뒤로가기 버튼 감지
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        alert('앱이 백그라운드로 이동됨');
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    alert('PWA 이벤트 리스너 등록됨!');
+    if (!sidebarOpen) {
+      window.history.pushState({ sidebar: 'open' }, '');
+    }
+    window.addEventListener('popstate', handlePopState);
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, [sidebarOpen]);
 
