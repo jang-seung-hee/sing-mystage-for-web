@@ -82,18 +82,22 @@ const MainPage: React.FC = () => {
       } else {
         // setPopStateEvent('패널이 열려있음 - 질문');
         // 패널이 열려있으면 질문하고 닫기
-        const shouldExit = window.confirm('앱을 종료하시겠습니까?');
-        if (shouldExit) {
-          // setPopStateEvent('사용자 확인 - 앱 종료');
-          // 사용자가 확인을 누르면 앱 종료
-          window.history.back();
-        } else {
-          // setPopStateEvent('사용자 취소 - 상태 유지');
-          // 사용자가 취소를 누르면 현재 상태 유지
-          setTimeout(() => {
-            window.history.pushState(null, '', window.location.href);
-          }, 100);
-        }
+        
+        // 즉시 history state를 복원하여 앱 종료 방지
+        window.history.pushState(null, '', window.location.href);
+        
+        // 약간의 지연 후 확인 다이얼로그 표시
+        setTimeout(() => {
+          const shouldExit = window.confirm('앱을 종료하시겠습니까?');
+          if (shouldExit) {
+            // setPopStateEvent('사용자 확인 - 앱 종료');
+            // 사용자가 확인을 누르면 앱 종료
+            window.history.back();
+          } else {
+            // setPopStateEvent('사용자 취소 - 상태 유지');
+            // 사용자가 취소를 누르면 현재 상태 유지 (이미 history state가 복원됨)
+          }
+        }, 50);
       }
     };
 
