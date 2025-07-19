@@ -16,6 +16,7 @@ const MainPage: React.FC = () => {
   // 사이드바 토글 상태 (모바일: 기본 열림, 데스크톱: 기본 열림)
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const isToggleButtonRef = useRef(false);
+  const sidebarOpenRef = useRef(true);
 
   // 검색/선택/영상 상태 관리
   const [results, setResults] = useState<YouTubeSearchResultItem[]>([]);
@@ -46,7 +47,7 @@ const MainPage: React.FC = () => {
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     if (!isMobile) return;
 
-    let skipNextPop = false;
+    let isInitialized = false;
 
     const handlePopState = (e: PopStateEvent) => {
       // 토글 버튼으로 인한 상태 변경인 경우 무시
@@ -55,15 +56,11 @@ const MainPage: React.FC = () => {
         return;
       }
 
-      if (!sidebarOpen) {
+      if (!sidebarOpenRef.current) {
         // 사이드바가 닫혀있을 때 뒤로 버튼을 누르면 사이드바 열기
         setSidebarOpen(true);
-        skipNextPop = true;
-        // history를 한 번 더 앞으로 보내서 뒤로가기가 앱 종료로 이어지게 함
-        window.history.pushState(null, '', window.location.href);
-      } else if (skipNextPop) {
-        // 첫 popstate는 사이드바 오픈용이므로 무시
-        skipNextPop = false;
+        // 사이드바가 열린 상태에서 뒤로가기를 누르면 앱 종료 확인을 받기 위해 history state 추가
+        window.history.pushState({ sidebar: 'open' }, '');
       } else {
         // 사이드바 열려있을 때는 확인 다이얼로그 표시
         const shouldExit = window.confirm('앱을 종료하시겠습니까?');
@@ -72,27 +69,23 @@ const MainPage: React.FC = () => {
           window.history.back();
         } else {
           // 사용자가 취소를 누르면 현재 상태 유지
-          window.history.pushState(null, '', window.location.href);
+          window.history.pushState({ sidebar: 'open' }, '');
         }
       }
     };
 
-    // 토글 버튼으로 인한 상태 변경이 아닌 경우에만 history state 관리
-    if (!isToggleButtonRef.current) {
-      if (!sidebarOpen) {
-        window.history.pushState({ sidebar: 'open' }, '');
-      }
+    // 초기화 시에만 history state 추가
+    if (!isInitialized && !sidebarOpenRef.current) {
+      window.history.pushState({ sidebar: 'closed' }, '');
+      isInitialized = true;
     }
+    
     window.addEventListener('popstate', handlePopState);
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      // 사이드바 닫힐 때 가짜 state 정리
-      if (!sidebarOpen && window.history.state && window.history.state.sidebar === 'open') {
-        window.history.back();
-      }
     };
-  }, [sidebarOpen]);
+  }, []); // sidebarOpen 의존성 제거
 
   // 조건부 렌더링 처리
   // 로딩 중이면 로딩 스피너 표시
@@ -122,7 +115,9 @@ const MainPage: React.FC = () => {
   // 사이드바 토글 함수
   const toggleSidebar = () => {
     isToggleButtonRef.current = true;
-    setSidebarOpen(!sidebarOpen);
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    sidebarOpenRef.current = newState;
   };
 
   // 오버레이 클릭 시 사이드바 닫기 (모바일)
@@ -130,6 +125,7 @@ const MainPage: React.FC = () => {
     if (window.innerWidth < 1024) {
       isToggleButtonRef.current = true;
       setSidebarOpen(false);
+      sidebarOpenRef.current = false;
     }
   };
 
@@ -200,6 +196,7 @@ const MainPage: React.FC = () => {
     if (window.innerWidth < 1024) {
       isToggleButtonRef.current = true;
       setSidebarOpen(false);
+      sidebarOpenRef.current = false;
     }
     try {
       // 최근본 영상 탭에서만 addRecent 및 트리거
