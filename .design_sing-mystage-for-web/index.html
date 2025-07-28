@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SingMyStage - 디자인 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/index.css">
+    <script>
+        tailwind.config = {
+            content: ['./**/*.{html,js}'],
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-cyan': '#00ffff',
+                        'neon-pink': '#ff00ff',
+                        'neon-yellow': '#ffff00',
+                        'neon-blue': '#0066ff',
+                        'neon-green': '#00ff66',
+                        'neon-purple': '#9933ff',
+                        'dark-bg': '#0a0a0a',
+                        'dark-card': '#1a1a1a',
+                        'dark-border': '#333333',
+                        'dark-surface': '#0f0f0f',
+                    },
+                    boxShadow: {
+                        'glow-sm': '0 0 5px currentColor',
+                        'glow-md': '0 0 15px currentColor',
+                        'glow-lg': '0 0 25px currentColor',
+                        'glow-xl': '0 0 35px currentColor',
+                        'neon-cyan': '0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff',
+                        'neon-pink': '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 60px #ff00ff',
+                        'neon-yellow': '0 0 20px #ffff00, 0 0 40px #ffff00, 0 0 60px #ffff00',
+                        'neon-blue': '0 0 20px #0066ff, 0 0 40px #0066ff, 0 0 60px #0066ff',
+                        'neon-green': '0 0 20px #00ff66, 0 0 40px #00ff66, 0 0 60px #00ff66',
+                        'neon-purple': '0 0 20px #9933ff, 0 0 40px #9933ff, 0 0 60px #9933ff',
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse-glow 2s ease-in-out infinite alternate',
+                        'slide-in-left': 'slide-in-left 0.3s ease-out',
+                        'slide-out-left': 'slide-out-left 0.3s ease-in',
+                        'fade-in': 'fade-in 0.3s ease-out',
+                        'bounce-glow': 'bounce-glow 1s ease-in-out infinite',
+                        shimmer: 'shimmer 2s infinite',
+                        'spin-slow': 'spin 3s linear infinite',
+                        'spin-reverse': 'spin-reverse 4s linear infinite',
+                        float: 'float 3s ease-in-out infinite',
+                        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'pulse-glow': {
+                            '0%': {
+                                boxShadow: '0 0 5px currentColor',
+                                transform: 'scale(1)',
+                            },
+                            '100%': {
+                                boxShadow: '0 0 25px currentColor, 0 0 35px currentColor',
+                                transform: 'scale(1.02)',
+                            },
+                        },
+                        'slide-in-left': {
+                            '0%': {
+                                transform: 'translateX(-100%)',
+                                opacity: '0',
+                            },
+                            '100%': {
+                                transform: 'translateX(0)',
+                                opacity: '1',
+                            },
+                        },
+                        'slide-out-left': {
+                            '0%': {
+                                transform: 'translateX(0)',
+                                opacity: '1',
+                            },
+                            '100%': {
+                                transform: 'translateX(-100%)',
+                                opacity: '0',
+                            },
+                        },
+                        'fade-in': {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        'bounce-glow': {
+                            '0%, 100%': {
+                                transform: 'translateY(0)',
+                                boxShadow: '0 0 10px currentColor',
+                            },
+                            '50%': {
+                                transform: 'translateY(-10px)',
+                                boxShadow: '0 0 20px currentColor, 0 0 30px currentColor',
+                            },
+                        },
+                        shimmer: {
+                            '0%': {
+                                transform: 'translateX(-100%) skewX(-12deg)',
+                                opacity: '0',
+                            },
+                            '50%': {
+                                opacity: '0.4',
+                            },
+                            '100%': {
+                                transform: 'translateX(200%) skewX(-12deg)',
+                                opacity: '0',
+                            },
+                        },
+                        'spin-reverse': {
+                            '0%': { transform: 'rotate(360deg)' },
+                            '100%': { transform: 'rotate(0deg)' },
+                        },
+                        float: {
+                            '0%, 100%': {
+                                transform: 'translateY(0px)',
+                            },
+                            '50%': {
+                                transform: 'translateY(-10px)',
+                            },
+                        },
+                        'glow-pulse': {
+                            '0%, 100%': {
+                                boxShadow: '0 0 5px currentColor, 0 0 10px currentColor',
+                                transform: 'scale(1)',
+                            },
+                            '50%': {
+                                boxShadow: '0 0 15px currentColor, 0 0 25px currentColor, 0 0 35px currentColor',
+                                transform: 'scale(1.05)',
+                            },
+                        },
+                    },
+                    backgroundImage: {
+                        'gradient-dark': 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)',
+                        'gradient-neon': 'linear-gradient(135deg, #00ffff20 0%, #ff00ff20 50%, #ffff0020 100%)',
+                        'gradient-karaoke': 'linear-gradient(45deg, #0a0a0a 0%, #1a1a1a 25%, #0f0f23 50%, #1a1a1a 75%, #0a0a0a 100%)',
+                        'gradient-cosmic': 'linear-gradient(45deg, #0a0a0a 0%, #1a0a2e 25%, #16213e 50%, #1a0a2e 75%, #0a0a0a 100%)',
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    },
+                },
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-white min-h-screen">
+    <!-- 헤더 섹션 -->
+    <header class="bg-dark-card border-b border-dark-border p-4">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold text-neon-cyan animate-pulse-glow">SingMyStage</h1>
+            <p class="text-gray-400 mt-2">개인화된 노래방 서비스 디자인 가이드</p>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="container mx-auto p-6">
+        <!-- 색상 팔레트 섹션 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-pink mb-6 animate-glow-pulse">🎨 색상 팔레트</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div class="bg-neon-cyan p-4 rounded-lg shadow-neon-cyan">
+                    <div class="text-black font-bold">Neon Cyan</div>
+                    <div class="text-black text-sm">#00ffff</div>
+                </div>
+                <div class="bg-neon-pink p-4 rounded-lg shadow-neon-pink">
+                    <div class="text-black font-bold">Neon Pink</div>
+                    <div class="text-black text-sm">#ff00ff</div>
+                </div>
+                <div class="bg-neon-yellow p-4 rounded-lg shadow-neon-yellow">
+                    <div class="text-black font-bold">Neon Yellow</div>
+                    <div class="text-black text-sm">#ffff00</div>
+                </div>
+                <div class="bg-neon-blue p-4 rounded-lg shadow-neon-blue">
+                    <div class="text-white font-bold">Neon Blue</div>
+                    <div class="text-white text-sm">#0066ff</div>
+                </div>
+                <div class="bg-neon-green p-4 rounded-lg shadow-neon-green">
+                    <div class="text-black font-bold">Neon Green</div>
+                    <div class="text-black text-sm">#00ff66</div>
+                </div>
+                <div class="bg-neon-purple p-4 rounded-lg shadow-neon-purple">
+                    <div class="text-white font-bold">Neon Purple</div>
+                    <div class="text-white text-sm">#9933ff</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 다크 테마 색상 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-yellow mb-6 animate-glow-pulse">🌙 다크 테마 색상</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-dark-bg border border-dark-border p-4 rounded-lg">
+                    <div class="text-white font-bold">Dark BG</div>
+                    <div class="text-gray-400 text-sm">#0a0a0a</div>
+                </div>
+                <div class="bg-dark-card border border-dark-border p-4 rounded-lg">
+                    <div class="text-white font-bold">Dark Card</div>
+                    <div class="text-gray-400 text-sm">#1a1a1a</div>
+                </div>
+                <div class="bg-dark-border border border-gray-600 p-4 rounded-lg">
+                    <div class="text-white font-bold">Dark Border</div>
+                    <div class="text-gray-400 text-sm">#333333</div>
+                </div>
+                <div class="bg-dark-surface border border-dark-border p-4 rounded-lg">
+                    <div class="text-white font-bold">Dark Surface</div>
+                    <div class="text-gray-400 text-sm">#0f0f0f</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 그라디언트 섹션 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-green mb-6 animate-glow-pulse">🌈 그라디언트</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gradient-karaoke p-8 rounded-lg border border-neon-cyan">
+                    <h3 class="text-xl font-bold text-neon-cyan mb-2">Karaoke Gradient</h3>
+                    <p class="text-gray-300">노래방 테마 그라디언트</p>
+                </div>
+                <div class="bg-gradient-cosmic p-8 rounded-lg border border-neon-purple">
+                    <h3 class="text-xl font-bold text-neon-purple mb-2">Cosmic Gradient</h3>
+                    <p class="text-gray-300">우주 테마 그라디언트</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 애니메이션 섹션 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-blue mb-6 animate-glow-pulse">✨ 애니메이션</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-dark-card p-6 rounded-lg border border-neon-cyan animate-pulse-glow">
+                    <div class="text-neon-cyan font-bold text-center">Pulse Glow</div>
+                </div>
+                <div class="bg-dark-card p-6 rounded-lg border border-neon-pink animate-bounce-glow">
+                    <div class="text-neon-pink font-bold text-center">Bounce Glow</div>
+                </div>
+                <div class="bg-dark-card p-6 rounded-lg border border-neon-yellow animate-float">
+                    <div class="text-neon-yellow font-bold text-center">Float</div>
+                </div>
+                <div class="bg-dark-card p-6 rounded-lg border border-neon-green animate-glow-pulse">
+                    <div class="text-neon-green font-bold text-center">Glow Pulse</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 컴포넌트 예시 섹션 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-purple mb-6 animate-glow-pulse">🧩 컴포넌트 예시</h2>
+            
+            <!-- 버튼 예시 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-neon-cyan mb-4">버튼 스타일</h3>
+                <div class="flex flex-wrap gap-4">
+                    <button class="bg-neon-cyan text-black px-6 py-3 rounded-lg font-bold shadow-neon-cyan hover:shadow-glow-md transition-all duration-300">
+                        Neon Cyan Button
+                    </button>
+                    <button class="bg-neon-pink text-black px-6 py-3 rounded-lg font-bold shadow-neon-pink hover:shadow-glow-md transition-all duration-300">
+                        Neon Pink Button
+                    </button>
+                    <button class="bg-dark-card border border-neon-yellow text-neon-yellow px-6 py-3 rounded-lg font-bold shadow-neon-yellow hover:shadow-glow-md transition-all duration-300">
+                        Outline Button
+                    </button>
+                </div>
+            </div>
+
+            <!-- 카드 예시 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-neon-green mb-4">카드 스타일</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-dark-card border border-dark-border p-6 rounded-lg hover:border-neon-cyan transition-all duration-300">
+                        <h4 class="text-neon-cyan font-bold mb-2">기본 카드</h4>
+                        <p class="text-gray-400">기본적인 다크 테마 카드 스타일</p>
+                    </div>
+                    <div class="bg-dark-card border border-neon-pink p-6 rounded-lg shadow-neon-pink">
+                        <h4 class="text-neon-pink font-bold mb-2">네온 카드</h4>
+                        <p class="text-gray-400">네온 효과가 적용된 카드</p>
+                    </div>
+                    <div class="bg-gradient-karaoke border border-neon-yellow p-6 rounded-lg">
+                        <h4 class="text-neon-yellow font-bold mb-2">그라디언트 카드</h4>
+                        <p class="text-gray-300">그라디언트 배경의 카드</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 입력 필드 예시 -->
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-neon-blue mb-4">입력 필드</h3>
+                <div class="max-w-md">
+                    <input type="text" placeholder="검색어를 입력하세요..." 
+                           class="w-full bg-dark-card border border-dark-border text-white px-4 py-3 rounded-lg focus:border-neon-cyan focus:shadow-neon-cyan transition-all duration-300 placeholder-gray-500">
+                </div>
+            </div>
+        </section>
+
+        <!-- 레이아웃 예시 -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-neon-yellow mb-6 animate-glow-pulse">📱 레이아웃 예시</h2>
+            <div class="bg-dark-card border border-dark-border rounded-lg p-6">
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- 사이드바 시뮬레이션 -->
+                    <div class="lg:w-1/3 bg-dark-surface border border-dark-border rounded-lg p-4">
+                        <h3 class="text-neon-cyan font-bold mb-4">사이드 패널</h3>
+                        <div class="space-y-2">
+                            <div class="bg-dark-card p-3 rounded border border-dark-border">
+                                <div class="text-white font-medium">검색 결과 1</div>
+                                <div class="text-gray-400 text-sm">노래 제목</div>
+                            </div>
+                            <div class="bg-dark-card p-3 rounded border border-dark-border">
+                                <div class="text-white font-medium">검색 결과 2</div>
+                                <div class="text-gray-400 text-sm">노래 제목</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 메인 콘텐츠 시뮬레이션 -->
+                    <div class="lg:w-2/3 bg-dark-surface border border-dark-border rounded-lg p-4">
+                        <h3 class="text-neon-pink font-bold mb-4">비디오 패널</h3>
+                        <div class="bg-dark-bg border border-dark-border rounded-lg p-8 text-center">
+                            <div class="text-neon-green text-4xl mb-2">▶</div>
+                            <div class="text-gray-400">비디오 플레이어 영역</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-dark-card border-t border-dark-border p-6 mt-12">
+        <div class="container mx-auto text-center">
+            <p class="text-gray-400">SingMyStage 디자인 가이드 - 생성일: 2025-07-25</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 

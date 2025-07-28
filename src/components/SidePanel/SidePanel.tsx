@@ -35,16 +35,25 @@ const SidePanel: React.FC<SidePanelProps> = ({
   onPlayAll,
   onPlayRandom,
 }) => {
-  // 모바일 환경 감지
+  // 모바일 환경 감지 및 사이드바 상태 통합 관리
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const [searchAreaHeight, setSearchAreaHeight] = useState(197);
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    const handleResize = () => {
+      const isMobileDevice = window.innerWidth < 1024;
+      setIsMobile(isMobileDevice);
+      
+      // 데스크톱에서는 사이드바를 항상 열린 상태로 유지
+      if (!isMobileDevice) {
+        setSidebarOpen(true);
+      }
+    };
+    
+    handleResize(); // 초기 실행
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setSidebarOpen]);
 
   // 저장된 사이드바 너비 불러오기
   useEffect(() => {

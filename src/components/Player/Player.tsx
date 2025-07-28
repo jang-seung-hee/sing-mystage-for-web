@@ -52,6 +52,10 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
     const totalPlayedRef = useRef<number>(0);
     const lastUserIdRef = useRef<string | null>(null);
     const lastDateRef = useRef<string | null>(null);
+    
+    // localStorage 캐싱용
+    const cachedUserIdRef = useRef<string | null>(null);
+    const cachedDateRef = useRef<string | null>(null);
 
     // 부모 컴포넌트에서 호출할 수 있는 메소드들 노출
     useImperativeHandle(ref, () => ({
@@ -206,7 +210,7 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
             // 일시정지 상태일 때도 상태 업데이트
             onPlayStateChange(false);
           }
-        }, 500); // 더 빠른 업데이트를 위해 500ms로 변경
+        }, 1000); // 성능 최적화를 위해 1000ms로 변경
       } else if (adFree) {
         // adFree 비디오의 경우 localStorage 초기화
         localStorage.removeItem('videoStartTime');
@@ -221,14 +225,14 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
       };
     }, [adFree, onTimeUpdate, streamUrl, videoId, onPlayStateChange]); // videoId와 onPlayStateChange도 의존성 추가
 
-    // adFree 비디오의 이벤트 리스너 강화 및 자동 재생
+    // adFree 비디오의 이벤트 리스너 최적화
     useEffect(() => {
       const video = videoRef.current;
       if (adFree && video && streamUrl) {
         // 비디오 로드 시도
         video.load();
 
-        // 초기 시간 설정 및 자동 재생 시도 (다중 이벤트로)
+        // 초기 시간 설정 및 자동 재생 시도 (최적화된 이벤트 리스너)
         const initializeTime = () => {
           if (video.duration && !isNaN(video.duration)) {
             if (onTimeUpdate) {
@@ -253,25 +257,11 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
           }
         };
 
-        // 다양한 이벤트에서 초기화 시도
-        video.addEventListener('loadeddata', initializeTime);
+        // loadedmetadata 이벤트만 사용하여 최적화
         video.addEventListener('loadedmetadata', initializeTime);
-        video.addEventListener('canplay', initializeTime);
-        video.addEventListener('canplaythrough', initializeTime);
-
-        // 주기적으로 시간 업데이트 확인 (fallback)
-        const fallbackInterval = setInterval(() => {
-          if (video.duration && !isNaN(video.duration) && onTimeUpdate) {
-            onTimeUpdate(video.currentTime || 0, video.duration);
-          }
-        }, 1000);
 
         return () => {
-          video.removeEventListener('loadeddata', initializeTime);
           video.removeEventListener('loadedmetadata', initializeTime);
-          video.removeEventListener('canplay', initializeTime);
-          video.removeEventListener('canplaythrough', initializeTime);
-          clearInterval(fallbackInterval);
         };
       }
     }, [adFree, streamUrl, onTimeUpdate, onPlayStateChange]);
@@ -288,10 +278,16 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
           // 시간 업데이트 (로그 제거로 성능 개선)
           onTimeUpdate(currentTime, duration);
 
-          // --- 누적 재생 시간 집계 ---
-          // userId, 날짜 정보는 localStorage에서 가져옴 (MainPage에서 저장)
-          const userId = localStorage.getItem('usage_userId');
-          const date = localStorage.getItem('usage_date');
+          // --- 누적 재생 시간 집계 (최적화된 localStorage 접근) ---
+          // 캐시된 값이 없으면 localStorage에서 가져와서 캐시
+          if (!cachedUserIdRef.current || !cachedDateRef.current) {
+            cachedUserIdRef.current = localStorage.getItem('usage_userId');
+            cachedDateRef.current = localStorage.getItem('usage_date');
+          }
+          
+          const userId = cachedUserIdRef.current;
+          const date = cachedDateRef.current;
+          
           if (userId && date) {
             // 10초 단위로만 전송
             const now = Math.floor(Date.now() / 1000);

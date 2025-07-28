@@ -53,8 +53,12 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
             // 가로모드: 전체화면 버튼은 항상 보임 (렌더링 조건에서 처리)
             // 전체화면 자동 진입은 사용자가 버튼을 눌러야 하므로 여기선 자동 진입 X
           } else {
-            // 세로모드: 전체화면이면 무조건 종료
-            if (document.fullscreenElement) {
+            // 세로모드: 전체화면이면 무조건 종료 (최적화된 DOM 접근)
+            const fullscreenElement = document.fullscreenElement || 
+                                    (document as any).webkitFullscreenElement ||
+                                    (document as any).mozFullScreenElement ||
+                                    (document as any).msFullscreenElement;
+            if (fullscreenElement) {
               document.exitFullscreen().catch(() => {});
             }
           }
@@ -62,7 +66,11 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
       };
 
       const handleFullscreenChange = () => {
-        setIsFullscreen(document.fullscreenElement === containerRef.current);
+        const fullscreenElement = document.fullscreenElement || 
+                                (document as any).webkitFullscreenElement ||
+                                (document as any).mozFullScreenElement ||
+                                (document as any).msFullscreenElement;
+        setIsFullscreen(fullscreenElement === containerRef.current);
       };
 
       window.addEventListener('orientationchange', handleOrientationChange);
@@ -201,7 +209,7 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
                 <div className="absolute inset-2 bg-gradient-to-r from-neon-pink via-neon-yellow to-neon-cyan rounded-full animate-spin-reverse opacity-30"></div>
                 <div className="absolute inset-4 bg-gradient-to-r from-neon-yellow via-neon-cyan to-neon-pink rounded-full animate-pulse opacity-40"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Music size={32} className="text-neon-cyan animate-pulse-glow" />
+                  <Music size={32} className="text-neon-cyan animate-pulse-glow-once" />
                 </div>
               </div>
             </div>
@@ -222,13 +230,13 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
 
             {/* 장식적 요소 */}
             <div className="flex justify-center space-x-2">
-              <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-neon-cyan rounded-full animate-bounce-glow-once"></div>
               <div
-                className="w-2 h-2 bg-neon-pink rounded-full animate-bounce"
+                className="w-2 h-2 bg-neon-pink rounded-full animate-bounce-glow-once"
                 style={{ animationDelay: '0.1s' }}
               ></div>
               <div
-                className="w-2 h-2 bg-neon-yellow rounded-full animate-bounce"
+                className="w-2 h-2 bg-neon-yellow rounded-full animate-bounce-glow-once"
                 style={{ animationDelay: '0.2s' }}
               ></div>
             </div>

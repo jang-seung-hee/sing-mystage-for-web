@@ -29,7 +29,17 @@ const MainPage: React.FC = () => {
   const [playlist, setPlaylist] = useState<YouTubeSearchResultItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
 
-  // 창 크기 변경 시 사이드바 상태 조정 (SidePanel에서 통합 관리)
+  // 창 크기 변경 시 사이드바 상태 조정
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true); // 데스크톱에서는 항상 열림
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 뒤로가기 버튼 클릭 모니터링 상태 (배포 시 주석 처리)
   // const [backButtonClicked, setBackButtonClicked] = useState(false);

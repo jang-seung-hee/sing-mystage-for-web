@@ -43,3 +43,9 @@ ui-debug.log
 # Environment and secrets
 .env.example.local
 .runtimeconfig.json
+
+# Backup files
+.백업/
+
+# Document files
+.doc/

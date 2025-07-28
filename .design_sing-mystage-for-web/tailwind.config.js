@@ -33,20 +33,15 @@ module.exports = {
       // Custom animations
       animation: {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite alternate',
-        'pulse-glow-once': 'pulse-glow 2s ease-in-out 1',
         'slide-in-left': 'slide-in-left 0.3s ease-out',
         'slide-out-left': 'slide-out-left 0.3s ease-in',
         'fade-in': 'fade-in 0.3s ease-out',
         'bounce-glow': 'bounce-glow 1s ease-in-out infinite',
-        'bounce-glow-once': 'bounce-glow 1s ease-in-out 1',
         shimmer: 'shimmer 2s infinite',
-        'shimmer-once': 'shimmer 2s 1',
         'spin-slow': 'spin 3s linear infinite',
         'spin-reverse': 'spin-reverse 4s linear infinite',
         float: 'float 3s ease-in-out infinite',
-        'float-once': 'float 3s ease-in-out 1',
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
-        'glow-pulse-once': 'glow-pulse 2s ease-in-out 1',
       },
       // Keyframes for custom animations
       keyframes: {
