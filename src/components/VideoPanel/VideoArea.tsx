@@ -285,8 +285,8 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
             if (!isMobile || !isLandscape) return null;
             return (
               <button
-                className="absolute top-4 right-4 z-30 bg-black/20 rounded-full p-1 border border-neon-cyan shadow-neon-cyan transition-all duration-300"
-                style={{ touchAction: 'manipulation', boxShadow: '0 0 8px #00fff7, 0 0 16px #00fff755', backdropFilter: 'blur(2px)' }}
+                className="absolute top-4 right-4 z-30 bg-black/20 rounded-full p-1 border border-neon-cyan shadow-neon-cyan transition-all duration-300 mobile-reduce-effects"
+                style={{ touchAction: 'manipulation' }}
                 onClick={handleFullscreenToggle}
               >
                 {isFullscreen ? <Minimize size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} /> : <Expand size={20} color="#00fff7" style={{ filter: 'drop-shadow(0 0 6px #00fff744)', opacity: 0.7 }} />}

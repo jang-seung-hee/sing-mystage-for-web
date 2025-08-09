@@ -250,4 +250,14 @@ code {
     will-change: transform, opacity;
     transform: translateZ(0);
   }
+  /* 무한 애니메이션과 무거운 필터를 모바일에서 비활성화 */
+  .animate-glow-right,
+  .animate-glow-left {
+    animation: none !important;
+  }
+  .mobile-reduce-effects {
+    filter: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
 }

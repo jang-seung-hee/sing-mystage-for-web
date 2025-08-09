@@ -162,11 +162,19 @@ const MainPage: React.FC = () => {
     date: string,
     seconds?: number,
   }) {
+    const url = 'https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage';
+    const payload = { type, userId, videoId, title, date, seconds };
     try {
-      await fetch('https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage', {
+      if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        (navigator as any).sendBeacon(url, blob);
+        return;
+      }
+      await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, userId, videoId, title, date, seconds }),
+        keepalive: true,
+        body: JSON.stringify(payload),
       });
     } catch (e) {
       // 집계 실패는 무시 (용량 최적화 목적)
@@ -257,11 +265,11 @@ const MainPage: React.FC = () => {
       const videoId = typeof item.id === 'string' ? item.id : item.id.videoId;
       const title = item.snippet?.title || '';
       recordUsage({ type: 'video_play', userId: user.uid, videoId, title, date: dateStr });
-      // 누적 재생 시간 집계를 위해 userId, date를 localStorage에 저장
-      localStorage.setItem('usage_userId', user.uid);
-      localStorage.setItem('usage_date', dateStr);
     }
-  };
+    // 누적 재생 시간 집계를 위해 userId, date를 localStorage에 저장
+    localStorage.setItem('usage_userId', user.uid);
+    localStorage.setItem('usage_date', new Date().toISOString().slice(0, 10));
+  }
 
   // 전체 재생 핸들러
   const handlePlayAll = (favorites: YouTubeSearchResultItem[]) => {

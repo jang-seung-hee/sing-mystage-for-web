@@ -40,19 +40,25 @@ const SidePanel: React.FC<SidePanelProps> = ({
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const [searchAreaHeight, setSearchAreaHeight] = useState(197);
   useEffect(() => {
+    let rafId = 0;
     const handleResize = () => {
       const isMobileDevice = window.innerWidth < 1024;
       setIsMobile(isMobileDevice);
-      
       // 데스크톱에서는 사이드바를 항상 열린 상태로 유지
       if (!isMobileDevice) {
         setSidebarOpen(true);
       }
     };
-    
+    const onResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(handleResize);
+    };
     handleResize(); // 초기 실행
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onResize);
+    };
   }, [setSidebarOpen]);
 
   // 저장된 사이드바 너비 불러오기

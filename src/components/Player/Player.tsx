@@ -20,18 +20,27 @@ export interface PlayerRef {
   toggle: () => void;
 }
 
-// recordUsage API 호출 함수
+// recordUsage API 호출 함수 (저전력 전송 우선: sendBeacon -> fetch keepalive)
 async function recordUsage({ type, userId, date, seconds }: {
   type: 'usage_time',
   userId: string,
   date: string,
   seconds: number,
 }) {
+  const url = 'https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage';
+  const payload = { type, userId, date, seconds };
   try {
-    await fetch('https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage', {
+    if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      (navigator as any).sendBeacon(url, blob);
+      return;
+    }
+    await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, userId, date, seconds }),
+      // 탭 종료/백그라운드 시에도 전송 시도
+      keepalive: true,
+      body: JSON.stringify(payload),
     });
   } catch (e) {
     // 집계 실패는 무시
@@ -159,28 +168,17 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
 
     // YouTube iframe의 경우 임시 시간 시뮬레이션 (실제 YouTube API는 별도 구현 필요)
     useEffect(() => {
-      // 기존 interval 정리
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      const simulatedDuration = 300; // 5분
 
-      if (!adFree && onTimeUpdate && streamUrl) {
-        // 새로운 비디오가 시작될 때 시간 초기화
-        const startTime = Date.now();
-        localStorage.setItem('videoStartTime', startTime.toString());
-        localStorage.setItem('videoPaused', 'false');
-
-        // 즉시 한 번 실행하여 초기 시간 설정
-        const simulatedDuration = 300; // 5분
-        onTimeUpdate(0, simulatedDuration);
-
-        // 초기 재생 상태도 설정
-        if (onPlayStateChange) {
-          onPlayStateChange(true); // YouTube 비디오는 기본적으로 재생 상태로 시작
+      const stopSimTimer = () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
+      };
 
-        // iframe의 경우 임시로 시간을 시뮬레이션 (YouTube API 미사용 시)
+      const startSimTimer = () => {
+        if (intervalRef.current) return;
         intervalRef.current = setInterval(() => {
           const now = Date.now();
           const startTimeStr = localStorage.getItem('videoStartTime');
@@ -190,27 +188,49 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
             const elapsed = (now - parseInt(startTimeStr)) / 1000;
             const currentTime = Math.min(elapsed, simulatedDuration);
 
-            // 시간 시뮬레이션 (로그 제거로 성능 개선)
+            onTimeUpdate?.(currentTime, simulatedDuration);
+            onPlayStateChange?.(true);
 
-            onTimeUpdate(currentTime, simulatedDuration);
-
-            // 재생 상태도 업데이트
-            if (onPlayStateChange) {
-              onPlayStateChange(true);
-            }
-
-            // 비디오가 끝났으면 일시정지 상태로 변경
             if (currentTime >= simulatedDuration) {
               localStorage.setItem('videoPaused', 'true');
-              if (onPlayStateChange) {
-                onPlayStateChange(false);
-              }
+              onPlayStateChange?.(false);
             }
-          } else if (isPaused && onPlayStateChange) {
-            // 일시정지 상태일 때도 상태 업데이트
-            onPlayStateChange(false);
+          } else if (isPaused) {
+            onPlayStateChange?.(false);
           }
-        }, 1000); // 성능 최적화를 위해 1000ms로 변경
+        }, 1000);
+      };
+
+      // 기존 interval 정리 후 초기화
+      stopSimTimer();
+
+      if (!adFree && onTimeUpdate && streamUrl) {
+        // 새로운 비디오가 시작될 때 시간 초기화
+        const startTime = Date.now();
+        localStorage.setItem('videoStartTime', startTime.toString());
+        localStorage.setItem('videoPaused', 'false');
+
+        // 즉시 한 번 실행하여 초기 시간 설정
+        onTimeUpdate(0, simulatedDuration);
+        onPlayStateChange?.(true);
+
+        // 문서가 보일 때만 타이머 실행
+        if (!document.hidden) startSimTimer();
+
+        // 가시성 변화에 따라 타이머 제어
+        const onVisibility = () => {
+          if (document.hidden) {
+            stopSimTimer();
+          } else {
+            if (!adFree && streamUrl) startSimTimer();
+          }
+        };
+        document.addEventListener('visibilitychange', onVisibility, { passive: true });
+
+        return () => {
+          document.removeEventListener('visibilitychange', onVisibility);
+          stopSimTimer();
+        };
       } else if (adFree) {
         // adFree 비디오의 경우 localStorage 초기화
         localStorage.removeItem('videoStartTime');
@@ -218,12 +238,9 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
       }
 
       return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+        stopSimTimer();
       };
-    }, [adFree, onTimeUpdate, streamUrl, videoId, onPlayStateChange]); // videoId와 onPlayStateChange도 의존성 추가
+    }, [adFree, onTimeUpdate, streamUrl, videoId, onPlayStateChange]);
 
     // adFree 비디오의 이벤트 리스너 최적화
     useEffect(() => {
@@ -417,8 +434,9 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
                 src={streamUrl}
                 controls
                 autoPlay
+                playsInline
                 preload="auto"
-                className="video-responsive rounded-lg shadow-2xl"
+                className="video-responsive rounded-lg shadow-2xl mobile-reduce-effects"
                 style={{
                   filter: 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.3))',
                 }}
@@ -433,13 +451,15 @@ const Player = forwardRef<PlayerRef, PlayerProps>(
                 ref={iframeRef}
                 src={streamUrl}
                 title="YouTube Video"
-                className="w-full h-full rounded-lg shadow-2xl"
+                className="w-full h-full rounded-lg shadow-2xl mobile-reduce-effects"
                 style={{
                   filter: 'drop-shadow(0 0 20px rgba(255, 0, 255, 0.3))',
                 }}
+                loading="lazy"
+                referrerPolicy="origin-when-cross-origin"
                 allowFullScreen
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
                 onLoad={() => {
                   // iframe 로드 완료
                 }}
