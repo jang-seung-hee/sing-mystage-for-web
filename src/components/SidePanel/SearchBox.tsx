@@ -2,7 +2,7 @@ import React from 'react';
 import SearchBar from '../Search/SearchBar';
 
 interface SearchBoxProps {
-  onSearch: (query: string, type: string) => void;
+  onSearch: (query: string) => void;
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSearch }) => {

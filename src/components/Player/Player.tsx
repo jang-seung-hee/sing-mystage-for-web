@@ -27,6 +27,11 @@ async function recordUsage({ type, userId, date, seconds }: {
   date: string,
   seconds: number,
 }) {
+  // 로컬 개발 환경에서는 CORS 문제로 집계 전송 생략
+  if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+    return;
+  }
+  
   const url = 'https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage';
   const payload = { type, userId, date, seconds };
   try {

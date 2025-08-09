@@ -72,7 +72,7 @@ try {
 - **필수**: Firebase Functions를 통한 간접 호출만 허용
 - **금지**: 클라이언트에서 직접 YouTube API 호출 금지
 - **스트림 URL**: `getAdFreeStreamUrl` 함수만 사용
-- **검색**: `searchYouTube` 또는 `searchKaraoke` 함수 사용
+- **검색**: `searchYouTube` 함수만 사용
 
 ### 컴포넌트 구조 규칙
 

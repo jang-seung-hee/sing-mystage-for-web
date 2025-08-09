@@ -17,8 +17,7 @@
     "cors": "^2.8.5",
     "firebase-admin": "^12.6.0",
     "firebase-functions": "^6.4.0",
-    "youtubei.js": "latest",
-    "yt-search": "^2.13.1"
+    "youtubei.js": "latest"
   },
   "devDependencies": {
     "eslint": "^8.15.0",

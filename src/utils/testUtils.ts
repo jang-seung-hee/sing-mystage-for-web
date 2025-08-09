@@ -5,7 +5,7 @@
 
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
-import { getAdFreeStreamUrl, searchKaraoke } from '../services/youtubeApi';
+import { getAdFreeStreamUrl, searchYouTube } from '../services/youtubeApi';
 
 /**
  * 안전하게 오류 메시지를 추출하는 헬퍼 함수

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
-import { searchYouTube, searchKaraoke, getAdFreeStreamUrl } from '../../services/youtubeApi';
+import { searchYouTube, getAdFreeStreamUrl } from '../../services/youtubeApi';
 import Player from '../Player/Player';
 import { addRecent } from '../../services/recentService';
 
@@ -13,11 +13,7 @@ const SearchContainer: React.FC = () => {
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [adFree, setAdFree] = useState(false);
 
-  const handleSearch = async (query: string, type: string) => {
-    if (type === 'video') {
-      alert('준비중인 기능입니다');
-      return;
-    }
+  const handleSearch = async (query: string) => {
     setLoading(true);
     setError(null);
     setResults([]);
@@ -26,29 +22,7 @@ const SearchContainer: React.FC = () => {
     setAdFree(false);
 
     try {
-      let items;
-
-      if (type === 'video') {
-        // 노래방 검색: yt-search 기반 (Firebase Functions)
-        // TJ노래방, 금영노래방 등 제한된 영상도 검색 가능
-        items = await searchKaraoke(`${query.trim()} 노래방`, 10);
-      } else {
-        // 일반 검색: YouTube Data API 사용
-        let searchQuery = query.trim();
-        if (type !== 'all') {
-          // 일반검색이 아닌 경우 타입에 따른 키워드 추가
-          const typeKeywords = {
-            music: '원곡',
-            cover: '커버곡',
-          };
-          const typeKeyword = typeKeywords[type as keyof typeof typeKeywords];
-          if (typeKeyword) {
-            searchQuery = `${query.trim()} ${typeKeyword}`;
-          }
-        }
-        items = await searchYouTube(searchQuery, 50);
-      }
-
+      const items = await searchYouTube(query.trim(), 50);
       setResults(items);
     } catch (err: any) {
       setError(err.message || '검색 실패');

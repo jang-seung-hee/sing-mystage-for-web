@@ -13,7 +13,7 @@ import {
   TestSummary,
   getErrorMessage,
 } from '../utils/testUtils';
-import { searchKaraoke } from '../services/youtubeApi';
+import { searchYouTube } from '../services/youtubeApi';
 
 interface TestResults {
   healthCheck?: any;
@@ -188,7 +188,7 @@ const TestPage: React.FC = () => {
         addLog(`검색 중: "${query}"`);
         const startTime = Date.now();
 
-        const results = await searchKaraoke(query, 5);
+        const results = await searchYouTube(query, 5);
         const responseTime = Date.now() - startTime;
 
         if (results && results.length > 0) {

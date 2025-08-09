@@ -162,6 +162,11 @@ const MainPage: React.FC = () => {
     date: string,
     seconds?: number,
   }) {
+    // 로컬 개발 환경에서는 CORS 문제로 집계 전송 생략
+    if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost') {
+      return;
+    }
+    
     const url = 'https://asia-northeast3-' + process.env.REACT_APP_FIREBASE_PROJECT_ID + '.cloudfunctions.net/recordUsage';
     const payload = { type, userId, videoId, title, date, seconds };
     try {
@@ -183,25 +188,12 @@ const MainPage: React.FC = () => {
   }
 
   // 실제 검색 기능 구현
-  const handleSearch = async (query: string, type = 'video') => {
+  const handleSearch = async (query: string) => {
     setSearchLoading(true);
     setError(null);
     setResults([]);
 
-    // 검색어 조합 로직
-    let searchQuery = query.trim();
-    if (type !== 'all') {
-      // 일반검색이 아닌 경우 타입에 따른 키워드 추가
-      const typeKeywords = {
-        video: '노래방',
-        music: '원곡',
-        cover: '커버곡',
-      };
-      const typeKeyword = typeKeywords[type as keyof typeof typeKeywords];
-      if (typeKeyword) {
-        searchQuery = `${query.trim()} ${typeKeyword}`;
-      }
-    }
+    const searchQuery = query.trim();
 
     // 검색 집계 호출
     if (user?.uid) {

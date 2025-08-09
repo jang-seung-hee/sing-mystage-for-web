@@ -14,7 +14,7 @@ interface SidePanelProps {
   results: any[];
   loading: boolean;
   error: string | null;
-  onSearch: (query: string, type?: string) => void;
+  onSearch: (query: string) => void;
   onSelect: (item: any, tab: 'recent' | 'favorites') => void;
   isOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
