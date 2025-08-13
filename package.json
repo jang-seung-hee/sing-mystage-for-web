@@ -37,6 +37,7 @@
     "format": "prettier --write .",
     "firebase": "firebase",
     "deploy:functions": "firebase deploy --only functions",
+    "deploy:firestore": "firebase deploy --only firestore",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:all": "npm run build && firebase deploy",
     "serve:local": "firebase emulators:start",

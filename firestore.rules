@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 사용자 인증 확인 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 사용자 본인 확인 함수
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // 관리자 확인 함수 (필요시 사용)
+    function isAdmin() {
+      return request.auth.uid in ['Iqp2Qb5KbrMuvCwjpzV6NViSa7i2']; // 실제 관리자 UID로 교체
+    }
+    
+    // 사용자 컬렉션 규칙
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      allow create: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // 사용자 비디오 재생 기록 규칙
+    match /user_video_plays/{docId} {
+      allow read, write: if isAuthenticated() && 
+        docId.matches(request.auth.uid + '_.*');
+    }
+    
+    // 사용자 검색 통계 규칙
+    match /user_search_stats/{docId} {
+      allow read, write: if isAuthenticated() && 
+        docId.matches(request.auth.uid + '_.*');
+    }
+    
+    // 사용자 사용 시간 규칙
+    match /user_usage_time/{docId} {
+      allow read, write: if isAuthenticated() && 
+        docId.matches(request.auth.uid + '_.*');
+    }
+    
+    // Rate Limiting 규칙 (Firebase Functions에서 사용)
+    match /rateLimits/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+      // 관리자는 모든 사용자의 rate limit 정보 읽기 가능
+      allow read: if isAuthenticated() && isAdmin();
+    }
+    
+    // 즐겨찾기 컬렉션 규칙
+    match /favorites/{favoriteId} {
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // 폴더 컬렉션 규칙
+    match /folders/{folderId} {
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // 공유 즐겨찾기 규칙 (읽기만 허용)
+    match /shared_favorites/{sharedId} {
+      allow read: if true; // 공개 읽기 허용
+      allow write: if isAuthenticated() && 
+        resource.data.ownerId == request.auth.uid;
+    }
+    
+    // 기본적으로 모든 접근 거부
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
