@@ -24,13 +24,13 @@ const ControlBox: React.FC<ControlBoxProps> = ({ repeatMode, onRepeatModeChange 
         <button
           className={`flex-1 w-full py-0.5 px-2 rounded-md text-sm font-bold transition-all duration-300 flex items-center justify-center gap-0.5 ${
             repeatMode 
-              ? 'bg-neon-cyan text-black border border-neon-cyan'
-              : 'bg-dark-card border border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-black hover:shadow-neon-cyan'
+              ? 'bg-neon-cyan text-black border border-neon-cyan shadow-neon-cyan'
+              : 'bg-transparent border border-gray-500 text-gray-400 hover:border-neon-cyan hover:text-neon-cyan'
           }`}
           onClick={handleRepeatToggle}
         >
-          <Repeat size={16} />
-          {repeatMode ? '반복 ON' : '반복'}
+          <Repeat size={16} className={repeatMode ? '' : 'opacity-60'} />
+          {repeatMode ? '반복 ON' : '반복 꺼짐'}
         </button>
         <button
           className="flex-1 w-full bg-dark-card border border-neon-pink text-neon-pink py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-pink hover:text-black hover:shadow-neon-pink transition-all duration-300 flex items-center justify-center gap-0.5"
