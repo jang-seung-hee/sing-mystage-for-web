@@ -1,10 +1,15 @@
-import React from 'react';
-import { Settings, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, TrendingUp, Repeat } from 'lucide-react';
 
-const ControlBox: React.FC = () => {
-  // 노래방차트 버튼 클릭 핸들러
-  const handleKaraokeChart = () => {
-    window.open('https://kysing.kr/genre-polular/', '_blank');
+interface ControlBoxProps {
+  repeatMode: boolean;
+  onRepeatModeChange: (mode: boolean) => void;
+}
+
+const ControlBox: React.FC<ControlBoxProps> = ({ repeatMode, onRepeatModeChange }) => {
+  // 반복 모드 토글 핸들러
+  const handleRepeatToggle = () => {
+    onRepeatModeChange(!repeatMode);
   };
 
   // 인기곡차트 버튼 클릭 핸들러
@@ -17,11 +22,15 @@ const ControlBox: React.FC = () => {
       {/* 컨트롤 버튼들 */}
       <div className="flex w-full gap-1">
         <button
-          className="flex-1 w-full bg-dark-card border border-neon-cyan text-neon-cyan py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-cyan hover:text-black hover:shadow-neon-cyan transition-all duration-300 flex items-center justify-center gap-0.5"
-          onClick={handleKaraokeChart}
+          className={`flex-1 w-full py-0.5 px-2 rounded-md text-sm font-bold transition-all duration-300 flex items-center justify-center gap-0.5 ${
+            repeatMode 
+              ? 'bg-neon-cyan text-black border border-neon-cyan'
+              : 'bg-dark-card border border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-black hover:shadow-neon-cyan'
+          }`}
+          onClick={handleRepeatToggle}
         >
-          <TrendingUp size={16} />
-          노래방차트
+          <Repeat size={16} />
+          {repeatMode ? '반복 ON' : '반복'}
         </button>
         <button
           className="flex-1 w-full bg-dark-card border border-neon-pink text-neon-pink py-0.5 px-2 rounded-md text-sm font-bold hover:bg-neon-pink hover:text-black hover:shadow-neon-pink transition-all duration-300 flex items-center justify-center gap-0.5"

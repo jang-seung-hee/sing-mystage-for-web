@@ -1,76 +1,84 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 사용자 인증 확인 함수
-    function isAuthenticated() {
+    // 공통 헬퍼
+    function isSignedIn() {
       return request.auth != null;
     }
-    
-    // 사용자 본인 확인 함수
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
-    
-    // 관리자 확인 함수 (필요시 사용)
     function isAdmin() {
-      return request.auth.uid in ['Iqp2Qb5KbrMuvCwjpzV6NViSa7i2']; // 실제 관리자 UID로 교체
+      return request.auth.uid in ['Iqp2Qb5KbrMuvCwjpzV6NViSa7i2'];
     }
-    
-    // 사용자 컬렉션 규칙
+
+    // users: 문서 ID = 사용자 UID
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && isOwner(userId);
-      allow create: if isAuthenticated() && isOwner(userId);
+      allow read, write: if isOwner(userId);
     }
-    
-    // 사용자 비디오 재생 기록 규칙
-    match /user_video_plays/{docId} {
-      allow read, write: if isAuthenticated() && 
-        docId.matches(request.auth.uid + '_.*');
+
+    // user_settings: 문서 ID = 사용자 UID
+    match /user_settings/{userId} {
+      allow read, write: if isOwner(userId);
     }
-    
-    // 사용자 검색 통계 규칙
-    match /user_search_stats/{docId} {
-      allow read, write: if isAuthenticated() && 
-        docId.matches(request.auth.uid + '_.*');
+
+    // favorites: 문서 ID는 랜덤, 소유권은 필드 uid로 판별
+    match /favorites/{docId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
-    
-    // 사용자 사용 시간 규칙
-    match /user_usage_time/{docId} {
-      allow read, write: if isAuthenticated() && 
-        docId.matches(request.auth.uid + '_.*');
+
+    // favorite_folders: 문서 ID는 랜덤, 소유권은 필드 uid로 판별
+    match /favorite_folders/{docId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
-    
-    // Rate Limiting 규칙 (Firebase Functions에서 사용)
-    match /rateLimits/{userId} {
-      allow read, write: if isAuthenticated() && isOwner(userId);
-      // 관리자는 모든 사용자의 rate limit 정보 읽기 가능
-      allow read: if isAuthenticated() && isAdmin();
+
+    // recent_played: 문서 ID는 랜덤, 소유권은 필드 uid로 판별
+    match /recent_played/{docId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
     }
-    
-    // 즐겨찾기 컬렉션 규칙
-    match /favorites/{favoriteId} {
-      allow read, write: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && 
-        request.resource.data.userId == request.auth.uid;
-    }
-    
-    // 폴더 컬렉션 규칙
-    match /folders/{folderId} {
-      allow read, write: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && 
-        request.resource.data.userId == request.auth.uid;
-    }
-    
-    // 공유 즐겨찾기 규칙 (읽기만 허용)
+
+    // 공유 즐겨찾기: 공개 읽기, 제한적 쓰기
     match /shared_favorites/{sharedId} {
-      allow read: if true; // 공개 읽기 허용
-      allow write: if isAuthenticated() && 
-        resource.data.ownerId == request.auth.uid;
+      // 누구나 검색/열람 가능
+      allow read: if true;
+
+      // 생성: 작성자만 (authorId = uid)
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+
+      // 업데이트: 
+      // - 소유자(작성자)는 전체 업데이트 가능
+      // - 그 외 인증 사용자는 특정 필드에 한해 허용 (downloadCount, rating/ratingCount 증가)
+      allow update: if isSignedIn() && (
+        // 소유자 전체 수정 허용
+        resource.data.authorId == request.auth.uid ||
+        // 비소유자: 다운로드 카운트 +1만 허용
+        (
+          request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloadCount']) &&
+          request.resource.data.downloadCount == resource.data.downloadCount + 1
+        ) ||
+        // 비소유자: 평점 추가만 허용 (rating은 +1..+5, ratingCount는 +1)
+        (
+          request.resource.data.diff(resource.data).changedKeys().hasOnly(['rating','ratingCount']) &&
+          request.resource.data.ratingCount == resource.data.ratingCount + 1 &&
+          request.resource.data.rating >= resource.data.rating + 1 &&
+          request.resource.data.rating <= resource.data.rating + 5
+        )
+      );
+
+      // 삭제: 작성자만
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
-    
-    // 기본적으로 모든 접근 거부
+
+    // Functions에서 사용하는 rateLimits: 본인 문서만, 관리자는 전체 읽기 허용
+    match /rateLimits/{userId} {
+      allow create, update, delete: if isOwner(userId);
+      allow read: if isOwner(userId) || (isSignedIn() && isAdmin());
+    }
+
+    // 기본: 명시되지 않은 경로는 거부
     match /{document=**} {
       allow read, write: if false;
     }

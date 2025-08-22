@@ -28,6 +28,21 @@ const MainPage: React.FC = () => {
   // 플레이리스트 및 현재 인덱스 상태 추가
   const [playlist, setPlaylist] = useState<YouTubeSearchResultItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
+  
+  // 반복 재생 모드 상태 추가 (localStorage에서 불러오기, 기본값: 반복 ON)
+  const [repeatMode, setRepeatMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('repeatMode');
+    return saved === null ? true : saved === 'true';
+  });
+  
+  // 반복 모드 변경 시 localStorage에 저장
+  const handleRepeatModeChange = (mode: boolean) => {
+    console.log('반복 모드 변경:', mode ? '켬' : '꺼짐');
+    setRepeatMode(mode);
+    localStorage.setItem('repeatMode', mode.toString());
+  };
+  
+  // 백업 타이머 제거: onEnded에서 즉시 재시작 처리로 일관성 보장
 
   // 창 크기 변경 시 사이드바 상태 조정 (SidePanel에서 통합 관리)
 
@@ -239,13 +254,13 @@ const MainPage: React.FC = () => {
       
       // 바로 iframe으로 설정 (에러 없이)
       setStreamUrl(
-        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
+        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`,
       );
       setAdFree(false);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);
       setStreamUrl(
-        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1`,
+        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`,
       );
       setAdFree(false);
     }
@@ -340,6 +355,8 @@ const MainPage: React.FC = () => {
           isOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           recentUpdateTrigger={recentUpdateTrigger}
+          repeatMode={repeatMode}
+          onRepeatModeChange={handleRepeatModeChange}
         />
         <div className="flex-1 flex flex-col">
           <VideoPanel
@@ -351,7 +368,23 @@ const MainPage: React.FC = () => {
             playlist={playlist}
             currentIndex={currentIndex}
             onEnded={() => {
+              console.log('영상 종료됨, 반복 모드:', repeatMode ? '켬' : '꺼짐');
+              if (repeatMode) {
+                // 같은 곡 즉시 재시작
+                const vid = typeof selected?.id === 'string' ? selected?.id : selected?.id.videoId;
+                if (!vid) return;
+                const restartUrl = `https://www.youtube.com/embed/${vid}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3&loop=1&playlist=${vid}`;
+                const prevUrl = streamUrl;
+                setStreamUrl(null);
+                setTimeout(() => {
+                  setStreamUrl(restartUrl);
+                }, 50);
+                console.log('반복 모드: 같은 곡 즉시 재시작');
+                return;
+              }
+              // 기존 로직: 다음 곡으로 진행
               if (currentIndex < playlist.length - 1) {
+                console.log('다음 곡으로 진행');
                 setCurrentIndex(currentIndex + 1);
               }
             }}

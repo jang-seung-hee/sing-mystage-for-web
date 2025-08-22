@@ -84,6 +84,80 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
       };
     }, []);
 
+    // YouTube iframe API를 사용하여 영상 종료 감지
+    useEffect(() => {
+      if (!adFree && streamUrl && onEnded) {
+        let intervalId: NodeJS.Timeout;
+        let setupTries = 0;
+        
+        // YouTube iframe에서 영상 종료 감지를 위한 메시지 리스너
+        const handleMessage = (event: MessageEvent) => {
+          if (event.origin !== 'https://www.youtube.com') return;
+          
+          try {
+            const data = JSON.parse(event.data);
+            console.log('YouTube iframe 메시지:', data);
+            if (data.event === 'onStateChange' && data.info === 0) {
+              // 영상이 끝났을 때 (0: ended)
+              console.log('YouTube 영상 종료 감지됨 - onEnded 호출');
+              onEnded();
+            }
+          } catch (e) {
+            // JSON 파싱 실패 시 무시
+          }
+        };
+
+        // onStateChange 이벤트를 받기 위해 YT 위젯에 리스너 등록
+        const setupYouTubeEventListeners = () => {
+          const iframe = document.querySelector('iframe[src*="youtube.com"]') as HTMLIFrameElement | null;
+          if (!iframe || !iframe.contentWindow) return;
+          try {
+            // 위젯 리스닝 시작
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening' }), '*');
+            // onStateChange 구독
+            iframe.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'addEventListener', args: ['onStateChange'] }),
+              '*',
+            );
+          } catch {}
+        };
+
+        // 초기 몇 초간 리스너 등록을 재시도하여 안정성 확보
+        const setupInterval = setInterval(() => {
+          setupTries += 1;
+          setupYouTubeEventListeners();
+          if (setupTries >= 10) clearInterval(setupInterval);
+        }, 200);
+
+        // YouTube iframe에 직접 명령 전송하여 상태 확인
+        const checkVideoState = () => {
+          const iframe = document.querySelector('iframe[src*="youtube.com"]') as HTMLIFrameElement;
+          if (iframe && iframe.contentWindow) {
+            try {
+              // 영상 상태 확인 명령
+              iframe.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'getPlayerState'
+              }), '*');
+            } catch (e) {
+              // postMessage 실패 시 무시
+            }
+          }
+        };
+
+        // 10초마다 영상 상태 확인 (너무 자주 확인하면 중복 이벤트 발생 가능)
+        intervalId = setInterval(checkVideoState, 10000);
+
+        window.addEventListener('message', handleMessage);
+        
+        return () => {
+          window.removeEventListener('message', handleMessage);
+          clearInterval(setupInterval);
+          if (intervalId) clearInterval(intervalId);
+        };
+      }
+    }, [adFree, streamUrl, onEnded]);
+
     // 전체화면 토글
     const handleFullscreenToggle = () => {
       const container = document.querySelector('.video-container');
