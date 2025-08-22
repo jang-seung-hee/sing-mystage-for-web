@@ -48,7 +48,7 @@ interface ListItem {
 }
 
 interface ListBoxProps {
-  onSelect: (item: any, tab: 'recent' | 'favorites') => void;
+  onSelect: (item: any, tab: 'recent' | 'favorites', ctx?: { playlist: any[]; index: number }) => void;
   recentUpdateTrigger: number;
   onPlayAll?: (favorites: any[]) => void;
   onPlayRandom?: (favorites: any[]) => void;
@@ -528,7 +528,7 @@ const ListBox: React.FC<ListBoxProps> = ({
           animationDelay: `${index * 50}ms`,
           animation: 'fadeInUp 0.5s ease-out forwards',
         }}
-        onClick={() => onSelect && onSelect(item.video, tab)}
+        onClick={() => onSelect && onSelect(item.video, tab, { playlist: favorites.map((f) => f.video), index })}
       >
         {/* 호버 그라데이션 효과 */}
         <div

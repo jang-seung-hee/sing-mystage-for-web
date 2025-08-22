@@ -29,9 +29,29 @@ const MainPage: React.FC = () => {
   const [playlist, setPlaylist] = useState<YouTubeSearchResultItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   
-  // 반복 재생 모드 상태 추가 (localStorage에서 불러오기, 기본값: 반복 ON)
+  // currentIndex가 변경될 때마다 해당 곡으로 streamUrl 업데이트
+  useEffect(() => {
+    if (playlist.length > 0 && currentIndex >= 0 && currentIndex < playlist.length) {
+      const currentItem = playlist[currentIndex];
+      if (currentItem) {
+        setSelected(currentItem);
+        const videoId = typeof currentItem.id === 'string' ? currentItem.id : currentItem.id.videoId;
+        const newStreamUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`;
+        setStreamUrl(newStreamUrl);
+        console.log('연속재생: 다음 곡으로 이동', currentIndex, currentItem.snippet?.title);
+      }
+    }
+  }, [currentIndex, playlist]);
+  
+  // 반복 재생 모드 상태 (localStorage에서 불러오기, 기본값: 반복 ON)
   const [repeatMode, setRepeatMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('repeatMode');
+    return saved === null ? true : saved === 'true';
+  });
+  
+  // 찜 연속재생 모드 상태 (localStorage에서 불러오기, 기본값: 찜 연속재생 ON)
+  const [favoritesAutoMode, setFavoritesAutoMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('favoritesAutoMode');
     return saved === null ? true : saved === 'true';
   });
   
@@ -40,6 +60,27 @@ const MainPage: React.FC = () => {
     console.log('반복 모드 변경:', mode ? '켬' : '꺼짐');
     setRepeatMode(mode);
     localStorage.setItem('repeatMode', mode.toString());
+    
+    // 반복 모드가 켜지면 찜 연속재생 모드는 꺼짐
+    if (mode && favoritesAutoMode) {
+      setFavoritesAutoMode(false);
+      localStorage.setItem('favoritesAutoMode', 'false');
+      console.log('반복 모드 ON으로 인해 찜 연속재생 모드 OFF');
+    }
+  };
+  
+  // 찜 연속재생 모드 변경 시 localStorage에 저장
+  const handleFavoritesAutoModeChange = (mode: boolean) => {
+    console.log('찜 연속재생 모드 변경:', mode ? '켬' : '꺼짐');
+    setFavoritesAutoMode(mode);
+    localStorage.setItem('favoritesAutoMode', mode.toString());
+    
+    // 찜 연속재생 모드가 켜지면 반복 모드는 꺼짐
+    if (mode && repeatMode) {
+      setRepeatMode(false);
+      localStorage.setItem('repeatMode', 'false');
+      console.log('찜 연속재생 모드 ON으로 인해 반복 모드 OFF');
+    }
   };
   
   // 백업 타이머 제거: onEnded에서 즉시 재시작 처리로 일관성 보장
@@ -228,7 +269,7 @@ const MainPage: React.FC = () => {
   };
 
   // 선택 시 영상 즉시 재생 및 최근곡 추가
-  const handleSelect = async (item: any, tab: 'recent' | 'favorites') => {
+  const handleSelect = async (item: any, tab: 'recent' | 'favorites', ctx?: { playlist: any[]; index: number }) => {
     setSelected(item);
     setStreamUrl(null);
     setAdFree(false);
@@ -252,6 +293,20 @@ const MainPage: React.FC = () => {
       // setStreamUrl(url);
       // setAdFree(true);
       
+      // favorites 연속재생 모드일 때: 클릭한 곡 기준으로 플레이리스트/인덱스 세팅
+      if (tab === 'favorites' && favoritesAutoMode && ctx && Array.isArray(ctx.playlist)) {
+        setPlaylist(ctx.playlist as YouTubeSearchResultItem[]);
+        setCurrentIndex(typeof ctx.index === 'number' ? ctx.index : 0);
+        console.log('찜 연속재생 모드: 플레이리스트 설정', {
+          playlistLength: ctx.playlist.length,
+          startIndex: ctx.index,
+          firstSong: ctx.playlist[0]?.snippet?.title
+        });
+      } else {
+        setPlaylist([]);
+        setCurrentIndex(-1);
+      }
+
       // 바로 iframe으로 설정 (에러 없이)
       setStreamUrl(
         `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`,
@@ -351,12 +406,14 @@ const MainPage: React.FC = () => {
           loading={searchLoading}
           error={error}
           onSearch={handleSearch}
-          onSelect={handleSelect as (item: any, tab: 'recent' | 'favorites') => void}
+          onSelect={handleSelect}
           isOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           recentUpdateTrigger={recentUpdateTrigger}
           repeatMode={repeatMode}
           onRepeatModeChange={handleRepeatModeChange}
+          favoritesAutoMode={favoritesAutoMode}
+          onFavoritesAutoModeChange={handleFavoritesAutoModeChange}
         />
         <div className="flex-1 flex flex-col">
           <VideoPanel
@@ -368,13 +425,12 @@ const MainPage: React.FC = () => {
             playlist={playlist}
             currentIndex={currentIndex}
             onEnded={() => {
-              console.log('영상 종료됨, 반복 모드:', repeatMode ? '켬' : '꺼짐');
+              console.log('영상 종료됨, 반복 모드:', repeatMode);
               if (repeatMode) {
                 // 같은 곡 즉시 재시작
                 const vid = typeof selected?.id === 'string' ? selected?.id : selected?.id.videoId;
                 if (!vid) return;
                 const restartUrl = `https://www.youtube.com/embed/${vid}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3&loop=1&playlist=${vid}`;
-                const prevUrl = streamUrl;
                 setStreamUrl(null);
                 setTimeout(() => {
                   setStreamUrl(restartUrl);
@@ -382,11 +438,21 @@ const MainPage: React.FC = () => {
                 console.log('반복 모드: 같은 곡 즉시 재시작');
                 return;
               }
-              // 기존 로직: 다음 곡으로 진행
-              if (currentIndex < playlist.length - 1) {
-                console.log('다음 곡으로 진행');
-                setCurrentIndex(currentIndex + 1);
+              // 찜 연속재생 모드에서만 다음 곡 진행
+              if (favoritesAutoMode) {
+                if (currentIndex < playlist.length - 1) {
+                  console.log('다음 곡으로 진행');
+                  setCurrentIndex(currentIndex + 1);
+                  // currentIndex 변경으로 useEffect가 트리거되어 다음 곡 streamUrl 자동 설정
+                } else {
+                  console.log('연속재생 완료: 마지막 곡');
+                  // 마지막 곡이 끝나면 플레이리스트 초기화
+                  setPlaylist([]);
+                  setCurrentIndex(-1);
+                }
+                return;
               }
+              // off: 아무 것도 하지 않음
             }}
           />
         </div>

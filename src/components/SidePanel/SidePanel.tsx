@@ -15,7 +15,7 @@ interface SidePanelProps {
   loading: boolean;
   error: string | null;
   onSearch: (query: string) => void;
-  onSelect: (item: any, tab: 'recent' | 'favorites') => void;
+  onSelect: (item: any, tab: 'recent' | 'favorites', ctx?: { playlist: any[]; index: number }) => void;
   isOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   recentUpdateTrigger: number;
@@ -23,6 +23,8 @@ interface SidePanelProps {
   onPlayRandom?: (favorites: any[]) => void;
   repeatMode: boolean;
   onRepeatModeChange: (mode: boolean) => void;
+  favoritesAutoMode: boolean;
+  onFavoritesAutoModeChange: (mode: boolean) => void;
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({
@@ -38,6 +40,8 @@ const SidePanel: React.FC<SidePanelProps> = ({
   onPlayRandom,
   repeatMode,
   onRepeatModeChange,
+  favoritesAutoMode,
+  onFavoritesAutoModeChange,
 }) => {
   // 모바일 환경 감지 및 사이드바 상태 통합 관리
   const [isMobile, setIsMobile] = useState(false);
@@ -137,7 +141,12 @@ const SidePanel: React.FC<SidePanelProps> = ({
         <ProfileBox />
         {/* 버튼 그룹을 로고 바로 아래로, 더 아래로 내리고 전체 폭을 채우도록 조정 */}
         <div className="px-2 mt-1 mb-1 w-full">
-          <ControlBox repeatMode={repeatMode} onRepeatModeChange={onRepeatModeChange} />
+          <ControlBox 
+            repeatMode={repeatMode} 
+            onRepeatModeChange={onRepeatModeChange}
+            favoritesAutoMode={favoritesAutoMode}
+            onFavoritesAutoModeChange={onFavoritesAutoModeChange}
+          />
         </div>
         {/* 버튼과 검색창 사이에 간격 */}
         <div className="h-2" />
