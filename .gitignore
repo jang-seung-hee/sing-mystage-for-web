@@ -54,3 +54,13 @@ ui-debug.log
 
 # Document files
 .doc/
+
+# Archive files (압축파일)
+*.zip
+*.rar
+*.7z
+*.tar
+*.tar.gz
+*.tar.bz2
+*.gz
+*.bz2
