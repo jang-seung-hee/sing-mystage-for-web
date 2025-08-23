@@ -555,6 +555,24 @@ const ListBox: React.FC<ListBoxProps> = ({
 
         {/* 버튼 영역 */}
         <div className="flex items-center gap-2 flex-shrink-0 ml-3 z-10">
+          {/* 최근 본 영상 탭: 찜 추가/제거 버튼 */}
+          {tab === 'recent' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(item.video);
+              }}
+              className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 flex-shrink-0 ${
+                isFavorited
+                  ? 'text-neon-pink hover:text-pink-300'
+                  : 'text-gray-500 hover:text-neon-pink'
+              }`}
+              title={isFavorited ? '찜 제거' : '찜 추가'}
+            >
+              <Heart size={14} fill={isFavorited ? 'currentColor' : 'none'} />
+            </button>
+          )}
+          
           {/* 이동 아이콘: 기본 찜 목록에서만 노출 */}
           {tab === 'favorites' && selectedFolderId === 'default' ? (
             <button
@@ -569,6 +587,7 @@ const ListBox: React.FC<ListBoxProps> = ({
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h4l2 3h7a2 2 0 0 1 2 2v2"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             </button>
           ) : null}
+          
           {/* 찜 목록에서 제거 (하트 아이콘으로 변경) */}
           {tab === 'favorites' && (
             <button

@@ -90,19 +90,23 @@ const FolderSelector: React.FC<FolderSelectorProps> = ({ isOpen, onClose, onSele
               </button>
 
               {/* 사용자 생성 폴더들 */}
-              {folders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => handleFolderSelect(folder.id)}
-                  className="w-full p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-left flex items-center gap-3"
-                >
-                  <Folder size={16} className="text-neon-pink" />
-                  <div>
-                    <div className="text-white font-medium">{folder.name}</div>
-                    <div className="text-gray-400 text-sm">{folder.count || 0}개 항목</div>
-                  </div>
-                </button>
-              ))}
+              {folders.map((folder) => {
+                const isOnlineFolder = folder.isFromOnline;
+                const folderColor = isOnlineFolder ? 'neon-pink' : 'neon-cyan';
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleFolderSelect(folder.id)}
+                    className="w-full p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-left flex items-center gap-3"
+                  >
+                    <Folder size={16} className={`text-${folderColor}`} />
+                    <div>
+                      <div className="text-white font-medium">{folder.name}</div>
+                      <div className="text-gray-400 text-sm">{folder.count || 0}개 항목</div>
+                    </div>
+                  </button>
+                );
+              })}
 
               {/* 빈 상태 */}
               {!loading && folders.length === 0 && (
