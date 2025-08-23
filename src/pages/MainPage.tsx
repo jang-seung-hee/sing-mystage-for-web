@@ -30,18 +30,7 @@ const MainPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number>(-1);
   
   // currentIndex가 변경될 때마다 해당 곡으로 streamUrl 업데이트
-  useEffect(() => {
-    if (playlist.length > 0 && currentIndex >= 0 && currentIndex < playlist.length) {
-      const currentItem = playlist[currentIndex];
-      if (currentItem) {
-        setSelected(currentItem);
-        const videoId = typeof currentItem.id === 'string' ? currentItem.id : currentItem.id.videoId;
-        const newStreamUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`;
-        setStreamUrl(newStreamUrl);
-        console.log('연속재생: 다음 곡으로 이동', currentIndex, currentItem.snippet?.title);
-      }
-    }
-  }, [currentIndex, playlist]);
+  // (repeatMode/favoritesAutoMode 선언 이후에 위치해야 함)
   
   // 반복 재생 모드 상태 (localStorage에서 불러오기, 기본값: 반복 ON)
   const [repeatMode, setRepeatMode] = useState<boolean>(() => {
@@ -55,6 +44,26 @@ const MainPage: React.FC = () => {
     return saved === null ? true : saved === 'true';
   });
   
+  // currentIndex가 변경될 때마다 해당 곡으로 streamUrl 업데이트
+  useEffect(() => {
+    if (playlist.length > 0 && currentIndex >= 0 && currentIndex < playlist.length) {
+      const currentItem = playlist[currentIndex];
+      if (currentItem) {
+        setSelected(currentItem);
+        const videoId = typeof currentItem.id === 'string' ? currentItem.id : currentItem.id.videoId;
+        // 찜 연속재생: YouTube 내부 playlist 파라미터 구성 (백그라운드에서도 다음 곡 진행 보조)
+        const playlistParam = favoritesAutoMode && playlist.length > 0
+          ? `&playlist=${playlist.map(it => typeof it.id === 'string' ? it.id : it.id.videoId).join(',')}`
+          : '';
+        // 반복모드 ON이라면 loop=1과 playlist=videoId로 같은 곡 무한 반복 보조
+        const loopParam = repeatMode ? `&loop=1&playlist=${videoId}` : '';
+        const newStreamUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3${loopParam}${playlistParam}`;
+        setStreamUrl(newStreamUrl);
+        console.log('연속재생: 다음 곡으로 이동', currentIndex, currentItem.snippet?.title);
+      }
+    }
+  }, [currentIndex, playlist, favoritesAutoMode, repeatMode]);
+
   // 반복 모드 변경 시 localStorage에 저장
   const handleRepeatModeChange = (mode: boolean) => {
     console.log('반복 모드 변경:', mode ? '켬' : '꺼짐');
@@ -307,10 +316,17 @@ const MainPage: React.FC = () => {
         setCurrentIndex(-1);
       }
 
-      // 바로 iframe으로 설정 (에러 없이)
-      setStreamUrl(
-        `https://www.youtube.com/embed/${typeof item.id === 'string' ? item.id : item.id.videoId}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3`,
-      );
+      // 바로 iframe으로 설정 (모드에 따라 loop/playlist 파라미터 적용)
+      {
+        const vid = typeof item.id === 'string' ? item.id : item.id.videoId;
+        const loopParam = repeatMode ? `&loop=1&playlist=${vid}` : '';
+        const playlistParam = (tab === 'favorites' && favoritesAutoMode && ctx && Array.isArray(ctx.playlist) && ctx.playlist.length > 0)
+          ? `&playlist=${ctx.playlist.map((it: any) => typeof it.id === 'string' ? it.id : it.id.videoId).join(',')}`
+          : '';
+        setStreamUrl(
+          `https://www.youtube.com/embed/${vid}?autoplay=1&start=0&rel=0&modestbranding=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&version=3${loopParam}${playlistParam}`,
+        );
+      }
       setAdFree(false);
     } catch (error) {
       console.error('스트림 URL 가져오기 실패:', error);

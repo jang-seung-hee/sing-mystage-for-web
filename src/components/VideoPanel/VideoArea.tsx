@@ -37,6 +37,7 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
     const hideBtnTimeout = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const endedCalledRef = useRef<boolean>(false);
 
     // 전체화면 상태 감지 및 모바일 대응(useEffect 통합)
     useEffect(() => {
@@ -89,6 +90,8 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
       if (!adFree && streamUrl && onEnded) {
         let intervalId: NodeJS.Timeout;
         let setupTries = 0;
+        // 새 영상 로드 시 종료 콜백 플래그 초기화
+        endedCalledRef.current = false;
         
         // YouTube iframe에서 영상 종료 감지를 위한 메시지 리스너
         const handleMessage = (event: MessageEvent) => {
@@ -96,10 +99,12 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
           
           try {
             const data = JSON.parse(event.data);
-            console.log('YouTube iframe 메시지:', data);
-            if (data.event === 'onStateChange' && data.info === 0) {
-              // 영상이 끝났을 때 (0: ended)
-              console.log('YouTube 영상 종료 감지됨 - onEnded 호출');
+            // console.log('YouTube iframe 메시지:', data);
+            // onStateChange(0) 또는 infoDelivery.playerState === 0 이면 종료로 간주
+            const endedByOnStateChange = data?.event === 'onStateChange' && data?.info === 0;
+            const endedByInfoDelivery = data?.event === 'infoDelivery' && data?.info && typeof data.info.playerState === 'number' && data.info.playerState === 0;
+            if ((endedByOnStateChange || endedByInfoDelivery) && !endedCalledRef.current) {
+              endedCalledRef.current = true;
               onEnded();
             }
           } catch (e) {
@@ -145,15 +150,24 @@ const VideoArea = forwardRef<PlayerRef, VideoAreaProps>(
           }
         };
 
-        // 10초마다 영상 상태 확인 (너무 자주 확인하면 중복 이벤트 발생 가능)
-        intervalId = setInterval(checkVideoState, 10000);
+        // 상태 확인 주기 단축: 비가시성/최소화 상태에서도 빠르게 종료 감지
+        intervalId = setInterval(checkVideoState, 2000);
+
+        // 탭이 다시 활성화될 때 즉시 상태 확인하여 종료 누락 보정
+        const onVisibility = () => {
+          if (!document.hidden) {
+            checkVideoState();
+          }
+        };
 
         window.addEventListener('message', handleMessage);
+        document.addEventListener('visibilitychange', onVisibility, { passive: true });
         
         return () => {
           window.removeEventListener('message', handleMessage);
           clearInterval(setupInterval);
           if (intervalId) clearInterval(intervalId);
+          document.removeEventListener('visibilitychange', onVisibility);
         };
       }
     }, [adFree, streamUrl, onEnded]);
