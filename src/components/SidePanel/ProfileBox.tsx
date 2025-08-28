@@ -12,7 +12,7 @@ const ProfileBox: React.FC = () => {
         <div className="flex-[2] flex justify-center">
           <div className="relative">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow bg-clip-text text-transparent animate-pulse-glow whitespace-nowrap">
-              Neon Music
+              Neon TUBE
             </h1>
             {/* 네온 글로우 이펙트 */}
             <div className="absolute -inset-[6px] bg-gradient-to-r from-neon-cyan via-neon-pink to-neon-yellow rounded-lg opacity-20 blur-sm animate-pulse"></div>

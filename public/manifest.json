@@ -1,19 +1,20 @@
 {
   "short_name": "Neon Tube",
   "name": "Neon Tube",
+  "version": "2.0.0",
   "icons": [
     {
-      "src": "faviconN.ico",
+      "src": "faviconN.ico?v=2.0",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192N.png",
+      "src": "logo192N.png?v=2.0",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512N.png",
+      "src": "logo512N.png?v=2.0",
       "type": "image/png",
       "sizes": "512x512"
     }
