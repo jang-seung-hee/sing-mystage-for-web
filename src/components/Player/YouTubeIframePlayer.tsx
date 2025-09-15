@@ -85,6 +85,21 @@ const YouTubeIframePlayer = forwardRef<YouTubeIframeRef, YouTubeIframePlayerProp
             origin: window.location.origin,
             widget_referrer: window.location.origin,
             loop: loopRef.current ? 1 : 0,
+            // 백그라운드 재생을 위한 추가 설정
+            enablejsapi: 1,
+            controls: 1,
+            disablekb: 0,
+            fs: 1,
+            cc_load_policy: 0,
+            iv_load_policy: 3,
+            autohide: 0,
+            showinfo: 0,
+            start: 0,
+            end: 0,
+            // 모바일 최적화
+            mobile: 1,
+            // 백그라운드 재생 지원
+            allowfullscreen: 1,
           },
           events: {
             onReady: () => {

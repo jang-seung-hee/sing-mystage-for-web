@@ -6,6 +6,8 @@ import { YouTubeSearchResultItem } from '../types/youtube';
 import { useAuth } from '../hooks/useAuth';
 import AuthForm from '../components/Auth/AuthForm';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
+import BackgroundPlayer from '../components/Player/BackgroundPlayer';
+import BackgroundPlaybackGuide from '../components/Common/BackgroundPlaybackGuide';
 const SidePanel = React.lazy(() => import('../components/SidePanel/SidePanel'));
 const VideoPanel = React.lazy(() => import('../components/VideoPanel/VideoPanel'));
 
@@ -43,6 +45,9 @@ const MainPage: React.FC = () => {
     const saved = localStorage.getItem('favoritesAutoMode');
     return saved === null ? true : saved === 'true';
   });
+  
+  // 재생 상태 관리
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   
   // currentIndex가 변경될 때마다 해당 곡으로 streamUrl 업데이트
   useEffect(() => {
@@ -473,6 +478,21 @@ const MainPage: React.FC = () => {
           />
         </div>
       </Suspense>
+      
+      {/* 백그라운드 재생 컴포넌트 */}
+      {selected && (
+        <BackgroundPlayer
+          videoId={typeof selected.id === 'string' ? selected.id : selected.id.videoId}
+          title={selected.snippet.title}
+          artist="YouTube"
+          thumbnail={selected.snippet.thumbnails.medium?.url || selected.snippet.thumbnails.default.url}
+          isPlaying={isPlaying}
+          onPlayStateChange={setIsPlaying}
+        />
+      )}
+      
+      {/* 백그라운드 재생 가이드 */}
+      <BackgroundPlaybackGuide />
     </div>
   );
 };

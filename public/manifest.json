@@ -1,6 +1,6 @@
 {
   "short_name": "Neon Tube",
-  "name": "Neon Tube",
+  "name": "Neon Tube - YouTube 노래방",
   "version": "2.0.0",
   "icons": [
     {
@@ -22,5 +22,11 @@
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["music", "entertainment"],
+  "description": "YouTube 기반 노래방 웹 애플리케이션",
+  "scope": "/",
+  "lang": "ko",
+  "dir": "ltr"
 }
