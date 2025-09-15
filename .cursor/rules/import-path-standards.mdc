@@ -1,0 +1,202 @@
+---
+globs: *.ts,*.tsx,*.js,*.jsx
+description: 임포트 경로 및 모듈 관리 표준
+---
+
+# 임포트 경로 및 모듈 관리 표준
+
+## 절대경로 Import 규칙
+
+### 기본 원칙
+- **절대경로 import**를 기본으로 사용
+- 상대경로(`../../..`)는 **금지** (임시/로컬 테스트 제외)
+- 인덱스 배럴 파일(`index.ts`) 남용 금지 (순환 의존 유발 주의)
+
+### TypeScript/JavaScript 경로 설정
+```json
+// tsconfig.json 설정
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/services/*": ["src/services/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/types/*": ["src/types/*"],
+      "@/utils/*": ["src/utils/*"]
+    }
+  }
+}
+```
+
+### 올바른 Import 패턴
+```typescript
+// ✅ 올바른 절대경로 import
+import { Button } from '@/components/Common/Button';
+import { useAuth } from '@/hooks/useAuth';
+import { searchYouTube } from '@/services/youtubeApi';
+import { YouTubeSearchResult } from '@/types/youtube';
+
+// ❌ 금지된 상대경로 import
+import { Button } from '../../Common/Button';
+import { useAuth } from '../../../hooks/useAuth';
+```
+
+### 공통 모듈 관리
+```typescript
+// 공통 유틸리티는 @/utils/ 경로 사용
+import { formatDate, debounce } from '@/utils/helpers';
+import { validateEmail, sanitizeInput } from '@/utils/validation';
+
+// 공통 상수는 @/constants/ 경로 사용
+import { API_ENDPOINTS, ERROR_MESSAGES } from '@/constants/app';
+import { THEME_COLORS, BREAKPOINTS } from '@/constants/theme';
+```
+
+## 모듈 구조 표준
+
+### 폴더 구조 규칙
+```
+/src
+  /components      # 순수 UI 컴포넌트 (프리젠테이셔널)
+    /Common        # 공통 컴포넌트
+    /Auth          # 인증 관련 컴포넌트
+    /Player        # 플레이어 관련 컴포넌트
+  /hooks           # 재사용 훅 (접두사 use*)
+  /services        # API 호출, 비즈니스 규칙
+  /types           # TypeScript 타입 정의
+  /utils           # 범용 유틸리티
+  /constants       # 상수 정의
+  /pages           # 라우트 엔트리
+```
+
+### 컴포넌트 Import 순서
+```typescript
+// 1. React 관련 import
+import React, { useState, useEffect } from 'react';
+
+// 2. 외부 라이브러리 import
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+// 3. 내부 절대경로 import (알파벳 순)
+import { Button } from '@/components/Common/Button';
+import { LoadingSpinner } from '@/components/Common/LoadingSpinner';
+import { useAuth } from '@/hooks/useAuth';
+import { searchYouTube } from '@/services/youtubeApi';
+import { YouTubeSearchResult } from '@/types/youtube';
+import { formatDate } from '@/utils/helpers';
+```
+
+## 중복 방지 및 재사용
+
+### 공통 함수 관리
+- 반복적으로 사용하는 기능(유틸리티, 공용 로직, 상수 등)은 **`/src/utils`** 또는 **`/src/constants`**에 저장
+- 메인/기능 코드에서는 **절대경로 import**로만 사용
+- **중복 금지**: 신규 함수 작성 전 체크리스트 통과 필수
+
+### 중복 탐지 체크리스트
+```typescript
+// 신규 함수 작성 전 반드시 확인
+// 1. 코드베이스 전역 검색 (이름/시그니처/설명어)
+// 2. 동일/유사 기능 발견 시 재사용 또는 기존 함수 개선
+// 3. 재사용이 불가한 합당한 사유를 PR 설명에 명시
+
+// 예시: 공통 유틸리티 함수
+// @/utils/dateHelpers.ts
+export const formatVideoDuration = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+// @/utils/validation.ts
+export const validateYouTubeUrl = (url: string): boolean => {
+  const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+  return youtubeRegex.test(url);
+};
+```
+
+## 순환 의존 방지
+
+### 배럴 파일 사용 제한
+```typescript
+// ❌ 과도한 배럴 파일 사용 금지
+// src/components/index.ts
+export * from './Auth/AuthForm';
+export * from './Auth/LogoutButton';
+export * from './Common/Button';
+// ... 모든 컴포넌트 export
+
+// ✅ 필요한 경우에만 제한적 사용
+// src/components/Common/index.ts
+export { Button } from './Button';
+export { Input } from './Input';
+export { LoadingSpinner } from './LoadingSpinner';
+```
+
+### 의존성 방향 관리
+```typescript
+// 올바른 의존성 방향
+// components → hooks → services → utils
+// components → types (타입은 어디서든 import 가능)
+
+// ❌ 금지된 의존성 방향
+// services → components (서비스가 컴포넌트를 import하면 안됨)
+// utils → services (유틸리티가 서비스를 import하면 안됨)
+```
+
+## 자동화 및 검증
+
+### ESLint 규칙 설정
+```json
+// .eslintrc.json
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          "../*",
+          "../../*",
+          "../../../*"
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 경로 별칭 검증 스크립트
+```bash
+#!/bin/bash
+# check-imports.sh
+echo "상대경로 import 검사 중..."
+
+# 상대경로 import 탐지
+relative_imports=$(grep -r "from ['\"]\.\." src/ --include="*.ts" --include="*.tsx" | wc -l)
+
+if [ $relative_imports -gt 0 ]; then
+  echo "❌ 상대경로 import 발견: $relative_imports 개"
+  grep -r "from ['\"]\.\." src/ --include="*.ts" --include="*.tsx"
+  exit 1
+else
+  echo "✅ 상대경로 import 없음"
+  exit 0
+fi
+```
+
+## 금지 사항
+
+### ❌ Import 관련 금지
+- 상대경로 import 사용 (`../../..`)
+- 순환 의존성 발생하는 import
+- 불필요한 배럴 파일 생성
+- 중복 기능을 가진 함수/모듈 생성
+
+### ❌ 모듈 구조 금지
+- 서비스 레이어에서 컴포넌트 import
+- 유틸리티에서 서비스 import
+- 타입 정의 파일에서 비즈니스 로직 포함
+- 인덱스 파일을 통한 과도한 re-export

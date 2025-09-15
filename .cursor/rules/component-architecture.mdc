@@ -1,0 +1,298 @@
+---
+globs: *.tsx,*.jsx
+description: React 컴포넌트 아키텍처 및 설계 원칙
+---
+
+# React 컴포넌트 아키텍처
+
+## 컴포넌트 분리 원칙
+
+### 기능별 컴포넌트 분리
+- **Auth**: [AuthForm.tsx](mdc:src/components/Auth/AuthForm.tsx), [LogoutButton.tsx](mdc:src/components/Auth/LogoutButton.tsx)
+- **Common**: [Button.tsx](mdc:src/components/Common/Button.tsx), [Input.tsx](mdc:src/components/Common/Input.tsx), [LoadingSpinner.tsx](mdc:src/components/Common/LoadingSpinner.tsx)
+- **Player**: [Player.tsx](mdc:src/components/Player/Player.tsx), [YouTubeIframePlayer.tsx](mdc:src/components/Player/YouTubeIframePlayer.tsx)
+- **Search**: [SearchBar.tsx](mdc:src/components/Search/SearchBar.tsx), [SearchResults.tsx](mdc:src/components/Search/SearchResults.tsx)
+- **SidePanel**: [SidePanel.tsx](mdc:src/components/SidePanel/SidePanel.tsx) - ControlBox, ListBox, ProfileBox로 세분화
+
+### Lazy Loading 구현
+```typescript
+// 메인 페이지에서 Lazy Loading 사용
+import React, { Suspense } from 'react';
+import LoadingSpinner from '../components/Common/LoadingSpinner';
+
+const SidePanel = React.lazy(() => import('../components/SidePanel/SidePanel'));
+const VideoPanel = React.lazy(() => import('../components/VideoPanel/VideoPanel'));
+
+// Suspense로 감싸기 필수
+<Suspense fallback={<LoadingSpinner />}>
+  <SidePanel />
+</Suspense>
+```
+
+## 컴포넌트 Props 설계
+
+### Props 타입 정의
+```typescript
+// 명확한 Props 인터페이스 정의
+interface PlayerProps {
+  videoId: string;
+  isPlaying: boolean;
+  onPlayPause: (isPlaying: boolean) => void;
+  onVideoEnd?: () => void;
+  onError?: (error: Error) => void;
+}
+
+// 옵셔널 Props 처리
+interface SearchBarProps {
+  onSearch: (query: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}
+```
+
+### Props 전달 패턴
+```typescript
+// Props Drilling 방지 - Context 사용
+interface PlayerContextType {
+  currentVideo: VideoInfo | null;
+  isPlaying: boolean;
+  playVideo: (videoId: string) => void;
+  pauseVideo: () => void;
+}
+
+const PlayerContext = createContext<PlayerContextType | null>(null);
+
+// Provider로 상태 관리
+const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentVideo, setCurrentVideo] = useState<VideoInfo | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  const playVideo = (videoId: string) => {
+    // 비디오 재생 로직
+  };
+  
+  return (
+    <PlayerContext.Provider value={{ currentVideo, isPlaying, playVideo, pauseVideo }}>
+      {children}
+    </PlayerContext.Provider>
+  );
+};
+```
+
+## 상태 관리 원칙
+
+### State 끌어올리기 (Lifting State Up)
+```typescript
+// 최상위 컴포넌트에서 상태 관리
+const MainPage: React.FC = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<YouTubeSearchResult[]>([]);
+  const [currentVideo, setCurrentVideo] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // 상태 변경 핸들러들
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    const results = await searchVideos(query);
+    setSearchResults(results);
+  };
+
+  const handleVideoSelect = (videoId: string) => {
+    setCurrentVideo(videoId);
+    setIsPlaying(true);
+  };
+
+  return (
+    <div className="flex h-screen bg-dark-bg">
+      <SidePanel 
+        onSearch={handleSearch}
+        searchResults={searchResults}
+        onVideoSelect={handleVideoSelect}
+      />
+      <VideoPanel 
+        videoId={currentVideo}
+        isPlaying={isPlaying}
+        onPlayPause={setIsPlaying}
+      />
+    </div>
+  );
+};
+```
+
+### 커스텀 훅 사용
+```typescript
+// 재사용 가능한 로직을 커스텀 훅으로 분리
+const useVideoPlayer = (initialVideoId?: string) => {
+  const [currentVideo, setCurrentVideo] = useState<string | null>(initialVideoId || null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const playVideo = useCallback((videoId: string) => {
+    setCurrentVideo(videoId);
+    setIsPlaying(true);
+    setIsLoading(true);
+  }, []);
+
+  const pauseVideo = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
+
+  const stopVideo = useCallback(() => {
+    setIsPlaying(false);
+    setCurrentVideo(null);
+  }, []);
+
+  return {
+    currentVideo,
+    isPlaying,
+    isLoading,
+    playVideo,
+    pauseVideo,
+    stopVideo
+  };
+};
+```
+
+## 에러 처리 및 경계
+
+### 에러 바운더리 구현
+```typescript
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  ErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('컴포넌트 오류:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-dark-card rounded-lg">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-2">오류가 발생했습니다</h2>
+            <p className="text-gray-400 mb-4">페이지를 새로고침해주세요.</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-neon-cyan text-black rounded hover:bg-neon-cyan/80"
+            >
+              새로고침
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+## 성능 최적화
+
+### 메모이제이션 사용
+```typescript
+// React.memo로 불필요한 리렌더링 방지
+const VideoThumbnail = React.memo<VideoThumbnailProps>(({ 
+  video, 
+  onSelect, 
+  isSelected 
+}) => {
+  return (
+    <div 
+      className={`cursor-pointer transition-all duration-200 ${
+        isSelected ? 'ring-2 ring-neon-cyan' : ''
+      }`}
+      onClick={() => onSelect(video.id)}
+    >
+      <img 
+        src={video.thumbnail} 
+        alt={video.title}
+        className="w-full h-32 object-cover rounded"
+      />
+      <h3 className="text-sm text-white mt-2 line-clamp-2">{video.title}</h3>
+    </div>
+  );
+});
+
+// useMemo로 계산 비용이 큰 값 메모이제이션
+const filteredResults = useMemo(() => {
+  return searchResults.filter(result => 
+    result.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+}, [searchResults, searchQuery]);
+
+// useCallback으로 함수 메모이제이션
+const handleVideoSelect = useCallback((videoId: string) => {
+  setCurrentVideo(videoId);
+  setIsPlaying(true);
+}, []);
+```
+
+## 컴포넌트 라이프사이클
+
+### useEffect 사용 패턴
+```typescript
+// 컴포넌트 마운트 시 초기화
+useEffect(() => {
+  const initializePlayer = async () => {
+    try {
+      setIsLoading(true);
+      await loadVideoPlayer();
+    } catch (error) {
+      console.error('플레이어 초기화 실패:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  initializePlayer();
+}, []);
+
+// 의존성 배열을 명확히 지정
+useEffect(() => {
+  if (videoId) {
+    loadVideoDetails(videoId);
+  }
+}, [videoId]); // videoId가 변경될 때만 실행
+
+// 클린업 함수로 메모리 누수 방지
+useEffect(() => {
+  const interval = setInterval(() => {
+    updatePlayerTime();
+  }, 1000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, []);
+```
+
+## 금지 사항
+
+### ❌ 컴포넌트 설계 금지
+- 400라인을 초과하는 컴포넌트 작성
+- 단일 책임 원칙을 위반한 컴포넌트 작성
+- Props 타입 정의 없이 컴포넌트 작성
+- 에러 처리 없는 컴포넌트 작성
+
+### ❌ 상태 관리 금지
+- 전역 상태 없이 props drilling 남용
+- useEffect 의존성 배열 생략
+- 메모이제이션 없이 무거운 계산 반복
+- 클린업 함수 없는 사이드 이펙트

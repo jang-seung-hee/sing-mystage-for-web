@@ -1,0 +1,257 @@
+---
+globs: *.tsx,*.jsx,*.css,*.scss
+description: Tailwind CSS 스타일링 표준 및 디자인 시스템
+---
+
+# 스타일링 표준
+
+## Tailwind CSS 사용 규칙
+
+### 필수 사용 클래스
+- **다크 테마**: `bg-dark-bg`, `bg-dark-card`, `text-white`, `text-gray-300`
+- **네온 효과**: `text-neon-cyan`, `shadow-neon-cyan`, `animate-pulse-glow`
+- **반응형**: 모바일 우선 설계 (`lg:`, `md:`, `sm:` 접두사 활용)
+
+### 금지 사항
+- ❌ 인라인 스타일 사용 금지
+- ❌ 커스텀 CSS 클래스 작성 금지 (Tailwind로 대체 불가능한 경우 제외)
+- ❌ Bootstrap, Material-UI 등 다른 UI 프레임워크 사용 금지
+
+## 디자인 시스템
+
+### 색상 팔레트
+```css
+/* tailwind.config.js에 정의된 커스텀 색상 */
+colors: {
+  'dark-bg': '#0a0a0a',
+  'dark-card': '#1a1a1a',
+  'neon-cyan': '#00ffff',
+  'neon-pink': '#ff00ff',
+  'gray-dark': '#2a2a2a'
+}
+```
+
+### 타이포그래피
+```typescript
+// 제목 스타일
+<h1 className="text-3xl font-bold text-white mb-4">
+  SingMystage
+</h1>
+
+// 부제목 스타일
+<h2 className="text-xl font-semibold text-neon-cyan mb-2">
+  최근 재생 목록
+</h2>
+
+// 본문 스타일
+<p className="text-gray-300 text-sm leading-relaxed">
+  노래를 검색하고 즐겨찾기에 추가하세요.
+</p>
+```
+
+### 버튼 스타일
+```typescript
+// 주요 버튼 (네온 효과)
+<button className="px-6 py-3 bg-neon-cyan text-black font-semibold rounded-lg hover:bg-neon-cyan/80 transition-colors duration-200 shadow-neon-cyan/50">
+  재생
+</button>
+
+// 보조 버튼
+<button className="px-4 py-2 bg-dark-card text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+  취소
+</button>
+
+// 위험 버튼
+<button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+  삭제
+</button>
+```
+
+### 카드 컴포넌트
+```typescript
+// 기본 카드
+<div className="bg-dark-card rounded-lg p-4 border border-gray-700 hover:border-neon-cyan/50 transition-colors duration-200">
+  <h3 className="text-white font-semibold mb-2">제목</h3>
+  <p className="text-gray-300 text-sm">설명</p>
+</div>
+
+// 네온 효과 카드
+<div className="bg-dark-card rounded-lg p-4 border border-neon-cyan/30 shadow-neon-cyan/20 hover:shadow-neon-cyan/40 transition-all duration-300">
+  <h3 className="text-neon-cyan font-semibold mb-2">특별한 카드</h3>
+  <p className="text-gray-300 text-sm">네온 효과가 적용된 카드</p>
+</div>
+```
+
+## 반응형 디자인
+
+### 브레이크포인트 사용
+```typescript
+// 모바일 우선 설계
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div className="p-4 bg-dark-card rounded-lg">
+    반응형 그리드 아이템
+  </div>
+</div>
+
+// 사이드 패널 반응형
+<div className="w-full lg:w-80 bg-dark-card border-r border-gray-700">
+  {/* 사이드 패널 내용 */}
+</div>
+
+// 메인 콘텐츠 영역
+<div className="flex-1 bg-dark-bg overflow-hidden">
+  {/* 메인 콘텐츠 */}
+</div>
+```
+
+### 모바일 최적화
+```typescript
+// 터치 친화적 버튼 크기
+<button className="px-6 py-4 text-lg bg-neon-cyan text-black rounded-lg touch-manipulation">
+  터치 버튼
+</button>
+
+// 스와이프 제스처 지원
+<div className="overflow-x-auto scrollbar-hide">
+  <div className="flex space-x-4 min-w-max">
+    {/* 가로 스크롤 콘텐츠 */}
+  </div>
+</div>
+```
+
+## 애니메이션 및 트랜지션
+
+### 기본 트랜지션
+```typescript
+// 호버 효과
+<div className="transition-all duration-200 hover:scale-105 hover:shadow-lg">
+  호버 애니메이션
+</div>
+
+// 색상 변화
+<button className="transition-colors duration-200 hover:bg-neon-cyan hover:text-black">
+  색상 변화
+</button>
+
+// 크기 변화
+<div className="transition-transform duration-300 hover:scale-110">
+  크기 변화
+</div>
+```
+
+### 네온 효과 애니메이션
+```typescript
+// 펄스 글로우 효과
+<div className="animate-pulse-glow text-neon-cyan">
+  네온 텍스트
+</div>
+
+// 그라데이션 애니메이션
+<div className="bg-gradient-to-r from-neon-cyan to-neon-pink animate-gradient-x">
+  그라데이션 배경
+</div>
+```
+
+## 로딩 상태 스타일
+
+### 스피너 및 로딩 상태
+```typescript
+// 로딩 스피너
+<div className="flex items-center justify-center h-32">
+  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-neon-cyan"></div>
+</div>
+
+// 스켈레톤 로딩
+<div className="animate-pulse">
+  <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+  <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+</div>
+
+// 프로그레스 바
+<div className="w-full bg-gray-700 rounded-full h-2">
+  <div className="bg-neon-cyan h-2 rounded-full transition-all duration-300" style={{width: '45%'}}></div>
+</div>
+```
+
+## 포커스 및 접근성
+
+### 키보드 네비게이션
+```typescript
+// 포커스 스타일
+<button className="focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-bg">
+  포커스 가능한 버튼
+</button>
+
+// 탭 인덱스 관리
+<div className="space-y-2" role="list">
+  <button className="block w-full text-left p-2 hover:bg-gray-700 focus:bg-gray-700 focus:outline-none" tabIndex={0}>
+    리스트 아이템 1
+  </button>
+</div>
+```
+
+### 접근성 속성
+```typescript
+// 스크린 리더 지원
+<button 
+  aria-label="재생 버튼"
+  aria-pressed={isPlaying}
+  className="p-2 bg-neon-cyan text-black rounded"
+>
+  {isPlaying ? <PauseIcon /> : <PlayIcon />}
+</button>
+
+// ARIA 라벨
+<div role="region" aria-label="검색 결과">
+  {/* 검색 결과 내용 */}
+</div>
+```
+
+## 커스텀 CSS (예외적 허용)
+
+### Tailwind로 불가능한 스타일만 허용
+```css
+/* src/index.css - 글로벌 스타일만 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 커스텀 애니메이션 */
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+  50% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 스크롤바 숨기기 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+```
+
+## 금지 사항
+
+### ❌ 스타일링 금지
+- 인라인 스타일 사용
+- Tailwind 대신 커스텀 CSS 클래스 작성
+- 다른 UI 프레임워크 사용 (Bootstrap, Material-UI 등)
+- 하드코딩된 색상값 사용 (#ffffff, rgb(255,255,255) 등)
+- 반응형 설계 무시한 고정 크기 사용
+
+### ❌ 접근성 위반
+- 포커스 스타일 생략
+- ARIA 라벨 생략
+- 키보드 네비게이션 불가능한 인터페이스
+- 색상 대비 기준 미달

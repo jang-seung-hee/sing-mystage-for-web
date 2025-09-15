@@ -1,0 +1,177 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript 코딩 표준 및 타입 안정성 규칙
+---
+
+# TypeScript 코딩 표준
+
+## 타입 정의 규칙
+
+### 인터페이스 vs 타입 별칭
+- **인터페이스**: 객체 구조 정의 시 사용
+- **타입 별칭**: Union 타입, Primitive 타입 확장 시 사용
+
+```typescript
+// 올바른 인터페이스 사용
+interface YouTubeSearchResult {
+  id: string;
+  title: string;
+  thumbnail: string;
+  duration: string;
+}
+
+// 올바른 타입 별칭 사용
+type PlayerState = 'playing' | 'paused' | 'stopped' | 'loading';
+```
+
+### 타입 정의 위치
+- **공통 타입**: [types/youtube.ts](mdc:src/types/youtube.ts)에 정의
+- **컴포넌트별 타입**: 해당 컴포넌트 파일 상단에 정의
+- **서비스별 타입**: 서비스 파일 내부에 정의
+
+### Props 타입 정의
+```typescript
+// 올바른 Props 타입 정의
+interface PlayerProps {
+  videoId: string;
+  onVideoEnd?: () => void;
+  isPlaying: boolean;
+  onPlayPause: (isPlaying: boolean) => void;
+}
+
+// 제네릭 사용 시
+interface SearchResultsProps<T> {
+  results: T[];
+  onItemSelect: (item: T) => void;
+  isLoading: boolean;
+}
+```
+
+## 함수 타입 정의
+
+### 함수 시그니처
+```typescript
+// 명확한 함수 타입 정의
+type VideoPlayerHandler = (videoId: string) => Promise<void>;
+type ErrorHandler = (error: Error) => void;
+
+// 비동기 함수 타입
+type AsyncServiceFunction<T, R> = (params: T) => Promise<R>;
+```
+
+### 서비스 함수 타입
+```typescript
+// YouTube API 서비스 타입
+interface YouTubeService {
+  searchVideos(query: string): Promise<YouTubeSearchResult[]>;
+  getStreamUrl(videoId: string): Promise<string>;
+  getVideoDetails(videoId: string): Promise<VideoDetails>;
+}
+```
+
+## 에러 처리 타입
+
+### 커스텀 에러 타입
+```typescript
+// 애플리케이션별 에러 타입
+interface AppError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+// API 에러 타입
+interface APIError extends AppError {
+  status: number;
+  endpoint: string;
+}
+```
+
+## React 컴포넌트 타입
+
+### 함수형 컴포넌트 타입
+```typescript
+// 기본 함수형 컴포넌트
+const Player: React.FC<PlayerProps> = ({ videoId, onVideoEnd, isPlaying }) => {
+  // 컴포넌트 로직
+};
+
+// 제네릭 컴포넌트
+const SearchResults = <T,>({ results, onItemSelect }: SearchResultsProps<T>) => {
+  // 컴포넌트 로직
+};
+```
+
+### 훅 타입 정의
+```typescript
+// 커스텀 훅 타입
+interface UseAuthReturn {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
+}
+
+const useAuth = (): UseAuthReturn => {
+  // 훅 로직
+};
+```
+
+## Firebase 타입 정의
+
+### Firestore 문서 타입
+```typescript
+// Firestore 문서 타입
+interface FavoriteDocument {
+  id: string;
+  userId: string;
+  videoId: string;
+  title: string;
+  thumbnail: string;
+  createdAt: Timestamp;
+}
+
+// 사용자 설정 타입
+interface UserSettings {
+  theme: 'light' | 'dark';
+  autoPlay: boolean;
+  volume: number;
+}
+```
+
+## 타입 가드 및 유틸리티
+
+### 타입 가드 함수
+```typescript
+// 타입 가드 정의
+function isYouTubeSearchResult(obj: unknown): obj is YouTubeSearchResult {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'id' in obj &&
+    'title' in obj &&
+    typeof (obj as any).id === 'string'
+  );
+}
+
+// 런타임 타입 검증
+function validateVideoId(id: unknown): string {
+  if (typeof id !== 'string' || id.length === 0) {
+    throw new Error('유효하지 않은 비디오 ID입니다');
+  }
+  return id;
+}
+```
+
+## 금지 사항
+
+### ❌ 타입 정의 금지
+- `any` 타입 사용 (예외적으로 외부 라이브러리 연동 시에만 허용)
+- 타입 정의 없이 컴포넌트 Props 사용
+- 함수 반환 타입 생략
+- 제네릭 타입 매개변수 생략
+
+### ❌ 타입 안정성 위반
+- 타입 단언(`as`) 남용
+- 옵셔널 체이닝(`?.`) 없이 중첩 객체 접근
+- 타입 가드 없이 런타임 타입 검증 생략

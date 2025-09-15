@@ -1,0 +1,229 @@
+---
+globs: *.ts,*.tsx,functions/*.js
+description: Firebase 연동 및 Functions 호출 표준
+---
+
+# Firebase 연동 표준
+
+## Firebase 설정 규칙
+
+### 환경 변수 설정
+```typescript
+// 환경 변수 타입 정의
+interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  region: string; // 한국 리전 필수
+}
+
+// 환경 변수 검증
+const validateFirebaseConfig = (config: any): FirebaseConfig => {
+  const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  for (const key of requiredKeys) {
+    if (!config[key]) {
+      throw new Error(`Firebase 설정에 ${key}가 누락되었습니다`);
+    }
+  }
+  return config as FirebaseConfig;
+};
+```
+
+### Firebase 초기화
+```typescript
+// [firebase.ts](mdc:src/firebase.ts) 표준 초기화 패턴
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+
+const firebaseConfig = {
+  // 환경 변수에서 설정 로드
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const functions = getFunctions(app, 'asia-northeast3'); // 한국 리전 필수
+```
+
+## Firebase Functions 호출 표준
+
+### Functions 호출 패턴
+```typescript
+// 표준 Functions 호출 패턴
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../firebase';
+
+// YouTube 검색 함수 호출
+const searchYouTube = httpsCallable(functions, 'searchYouTube');
+const getAdFreeStreamUrl = httpsCallable(functions, 'getAdFreeStreamUrl');
+
+// 에러 처리와 함께 호출
+export const searchVideos = async (query: string): Promise<YouTubeSearchResult[]> => {
+  try {
+    const result = await searchYouTube({ query });
+    return result.data as YouTubeSearchResult[];
+  } catch (error) {
+    console.error('YouTube 검색 실패:', error);
+    throw new Error('동영상 검색에 실패했습니다. 다시 시도해주세요.');
+  }
+};
+```
+
+### Functions 에러 처리
+```typescript
+// 통합 에러 처리 함수
+interface FirebaseError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
+
+const handleFirebaseError = (error: unknown): never => {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const firebaseError = error as FirebaseError;
+    
+    switch (firebaseError.code) {
+      case 'functions/unavailable':
+        throw new Error('서버가 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해주세요.');
+      case 'functions/invalid-argument':
+        throw new Error('잘못된 요청입니다. 입력값을 확인해주세요.');
+      case 'functions/permission-denied':
+        throw new Error('권한이 없습니다. 로그인 후 다시 시도해주세요.');
+      default:
+        throw new Error('예상치 못한 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  }
+  
+  throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
+};
+```
+
+## Firestore 사용 표준
+
+### Firestore 쿼리 패턴
+```typescript
+// 사용자 즐겨찾기 조회
+import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+
+export const getUserFavorites = async (userId: string): Promise<FavoriteDocument[]> => {
+  try {
+    const favoritesRef = collection(db, 'favorites');
+    const q = query(
+      favoritesRef,
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as FavoriteDocument[];
+  } catch (error) {
+    console.error('즐겨찾기 조회 실패:', error);
+    throw new Error('즐겨찾기 목록을 불러올 수 없습니다.');
+  }
+};
+```
+
+### Firestore 문서 생성/수정
+```typescript
+// 즐겨찾기 추가
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+export const addToFavorites = async (
+  userId: string, 
+  videoId: string, 
+  title: string, 
+  thumbnail: string
+): Promise<string> => {
+  try {
+    const docRef = await addDoc(collection(db, 'favorites'), {
+      userId,
+      videoId,
+      title,
+      thumbnail,
+      createdAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('즐겨찾기 추가 실패:', error);
+    throw new Error('즐겨찾기 추가에 실패했습니다.');
+  }
+};
+```
+
+## Firebase Functions 개발 표준
+
+### Functions 구조
+```javascript
+// [functions/index.js](mdc:functions/index.js) 표준 구조
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
+
+// 한국 리전 설정
+const region = 'asia-northeast3';
+
+// YouTube 검색 함수
+exports.searchYouTube = functions.region(region).https.onCall(async (data, context) => {
+  try {
+    // 인증 확인
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+    
+    const { query } = data;
+    if (!query || typeof query !== 'string') {
+      throw new functions.https.HttpsError('invalid-argument', '검색어가 필요합니다.');
+    }
+    
+    // YouTube API 호출 로직
+    const results = await searchYouTubeAPI(query);
+    return { results };
+  } catch (error) {
+    console.error('YouTube 검색 오류:', error);
+    throw new functions.https.HttpsError('internal', '검색 중 오류가 발생했습니다.');
+  }
+});
+```
+
+## 보안 규칙
+
+### Firestore 보안 규칙
+```javascript
+// [firestore.rules](mdc:firestore.rules) 예시
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 즐겨찾기는 소유자만 접근 가능
+    match /favorites/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+    
+    // 사용자 설정은 소유자만 접근 가능
+    match /userSettings/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == document;
+    }
+  }
+}
+```
+
+## 금지 사항
+
+### ❌ Firebase 사용 금지
+- 클라이언트에서 직접 YouTube API 호출
+- Firebase 환경 변수를 코드에 하드코딩
+- 한국 리전 외의 리전 사용
+- 보안 규칙 없이 Firestore 사용
+- Functions에서 클라이언트 측 인증 우회
+
+### ❌ Functions 개발 금지
+- 에러 처리 없는 Functions 작성
+- 입력값 검증 없는 Functions 작성
+- 로그 기록 없는 Functions 작성

@@ -1,0 +1,401 @@
+---
+alwaysApply: false
+description: 자동화 도구 및 품질 관리 스크립트
+---
+
+# 자동화 도구 및 품질 관리
+
+## 라인 수 가드 스크립트
+
+### 파일 라인 수 검사
+```bash
+#!/bin/bash
+# scripts/check-line-count.sh
+echo "파일 라인 수 검사 중..."
+
+# 검사 대상 파일 확장자
+file_patterns="*.ts *.tsx *.js *.jsx *.css *.scss *.py *.html *.htm"
+
+# 라인 수 제한
+WARNING_LIMIT=350
+ERROR_LIMIT=400
+
+violations=0
+warnings=0
+
+# src 디렉토리에서 파일 검사
+for pattern in $file_patterns; do
+  find src -name "$pattern" -type f | while read -r file; do
+    line_count=$(wc -l < "$file")
+    
+    if [ "$line_count" -gt "$ERROR_LIMIT" ]; then
+      echo "❌ ERROR: $file ($line_count lines) - 400라인 초과"
+      violations=$((violations + 1))
+    elif [ "$line_count" -gt "$WARNING_LIMIT" ]; then
+      echo "⚠️  WARNING: $file ($line_count lines) - 350라인 초과"
+      warnings=$((warnings + 1))
+    fi
+  done
+done
+
+if [ $violations -gt 0 ]; then
+  echo "❌ $violations 개 파일이 라인 수 제한을 초과했습니다."
+  exit 1
+elif [ $warnings -gt 0 ]; then
+  echo "⚠️  $warnings 개 파일이 라인 수 경고 기준을 초과했습니다."
+  exit 0
+else
+  echo "✅ 모든 파일이 라인 수 기준을 통과했습니다."
+  exit 0
+fi
+```
+
+### package.json 스크립트 추가
+```json
+{
+  "scripts": {
+    "lint:lines": "bash scripts/check-line-count.sh",
+    "lint:imports": "bash scripts/check-imports.sh",
+    "lint:security": "bash scripts/check-security.sh",
+    "lint:all": "npm run lint:lines && npm run lint:imports && npm run lint:security"
+  }
+}
+```
+
+## 중복 코드 탐지
+
+### jscpd 설정
+```json
+// jscpd.config.json
+{
+  "threshold": 1,
+  "reporters": ["console", "html"],
+  "output": "./reports",
+  "languages": ["javascript", "typescript", "python", "css"],
+  "min-tokens": 50,
+  "min-lines": 10,
+  "ignore": [
+    "node_modules/**",
+    "build/**",
+    "dist/**",
+    "*.test.*",
+    "*.spec.*"
+  ]
+}
+```
+
+### 중복 탐지 스크립트
+```bash
+#!/bin/bash
+# scripts/check-duplicates.sh
+echo "중복 코드 탐지 중..."
+
+# jscpd 실행
+npx jscpd src/ --config jscpd.config.json
+
+if [ $? -eq 0 ]; then
+  echo "✅ 중복 코드가 발견되지 않았습니다."
+else
+  echo "❌ 중복 코드가 발견되었습니다. reports/ 폴더를 확인하세요."
+  exit 1
+fi
+```
+
+## Import 경로 검증
+
+### 상대경로 Import 탐지
+```bash
+#!/bin/bash
+# scripts/check-imports.sh
+echo "Import 경로 검사 중..."
+
+# 상대경로 import 탐지
+relative_imports=$(find src -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | \
+  xargs grep -l "from ['\"]\.\." | wc -l)
+
+if [ $relative_imports -gt 0 ]; then
+  echo "❌ 상대경로 import 발견:"
+  find src -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | \
+    xargs grep -n "from ['\"]\.\."
+  echo ""
+  echo "절대경로 import로 변경해주세요:"
+  echo "예: import { Button } from '@/components/Common/Button';"
+  exit 1
+else
+  echo "✅ 상대경로 import가 없습니다."
+  exit 0
+fi
+```
+
+## 보안 검사
+
+### 민감정보 탐지 스크립트
+```bash
+#!/bin/bash
+# scripts/check-security.sh
+echo "보안 검사 중..."
+
+violations=0
+
+# 하드코딩된 API 키 탐지
+echo "하드코딩된 API 키 검사..."
+if grep -r "AIzaSy" src/ --exclude-dir=node_modules; then
+  echo "❌ 하드코딩된 Google API 키 발견"
+  violations=$((violations + 1))
+fi
+
+# 환경 변수 파일 검사
+echo "환경 변수 파일 검사..."
+if [ -f ".env" ]; then
+  echo "❌ .env 파일이 Git에 포함되어 있습니다. .gitignore에 추가하세요."
+  violations=$((violations + 1))
+fi
+
+# 금지된 파일 패턴 검사
+echo "금지된 파일 패턴 검사..."
+blocked_files=$(find . -name "*.zip" -o -name "*.rar" -o -name "*.7z" -o -name "google-services.json" -o -name "firebase-adminsdk-*.json" | wc -l)
+if [ $blocked_files -gt 0 ]; then
+  echo "❌ 금지된 파일 패턴 발견:"
+  find . -name "*.zip" -o -name "*.rar" -o -name "*.7z" -o -name "google-services.json" -o -name "firebase-adminsdk-*.json"
+  violations=$((violations + 1))
+fi
+
+if [ $violations -eq 0 ]; then
+  echo "✅ 보안 검사 통과"
+  exit 0
+else
+  echo "❌ $violations 개 보안 위반 발견"
+  exit 1
+fi
+```
+
+## Pre-commit 훅 설정
+
+### Pre-commit 설정 파일
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: check-line-count
+        name: Check line count
+        entry: bash scripts/check-line-count.sh
+        language: system
+        files: \.(ts|tsx|js|jsx|css|scss|py|html|htm)$
+        
+      - id: check-imports
+        name: Check import paths
+        entry: bash scripts/check-imports.sh
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        
+      - id: check-security
+        name: Check security
+        entry: bash scripts/check-security.sh
+        language: system
+        
+      - id: check-duplicates
+        name: Check code duplicates
+        entry: bash scripts/check-duplicates.sh
+        language: system
+        files: \.(ts|tsx|js|jsx|css|scss|py)$
+```
+
+### 설치 및 설정
+```bash
+# pre-commit 설치
+pip install pre-commit
+
+# pre-commit 훅 설치
+pre-commit install
+
+# 모든 파일에 대해 실행
+pre-commit run --all-files
+```
+
+## ESLint 규칙 강화
+
+### Import 경로 규칙
+```json
+// .eslintrc.json
+{
+  "extends": ["react-app", "react-app/jest"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["../*", "../../*", "../../../*"],
+            "message": "상대경로 import는 금지됩니다. 절대경로를 사용하세요."
+          }
+        ]
+      }
+    ],
+    "import/no-relative-packages": "error",
+    "import/no-relative-parent-imports": "error"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "./tsconfig.json"
+      }
+    }
+  }
+}
+```
+
+### 커스텀 ESLint 규칙
+```javascript
+// eslint-rules/no-hardcoded-secrets.js
+module.exports = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description: '하드코딩된 비밀정보 탐지',
+      category: 'Security',
+      recommended: true
+    },
+    schema: []
+  },
+  create(context) {
+    return {
+      Literal(node) {
+        if (typeof node.value === 'string') {
+          // API 키 패턴 탐지
+          if (node.value.match(/AIzaSy[A-Za-z0-9_-]{35}/)) {
+            context.report({
+              node,
+              message: '하드코딩된 API 키가 발견되었습니다. 환경 변수를 사용하세요.'
+            });
+          }
+          
+          // Firebase 설정 패턴 탐지
+          if (node.value.match(/firebase-adminsdk-[a-z0-9-]+\.json/)) {
+            context.report({
+              node,
+              message: 'Firebase 서비스 계정 키가 발견되었습니다. 환경 변수를 사용하세요.'
+            });
+          }
+        }
+      }
+    };
+  }
+};
+```
+
+## CI/CD 통합
+
+### GitHub Actions 워크플로우
+```yaml
+# .github/workflows/quality-check.yml
+name: Quality Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Check line count
+      run: npm run lint:lines
+    
+    - name: Check imports
+      run: npm run lint:imports
+    
+    - name: Check security
+      run: npm run lint:security
+    
+    - name: Check duplicates
+      run: npm run check-duplicates
+    
+    - name: Run ESLint
+      run: npm run lint
+    
+    - name: Run tests
+      run: npm test -- --coverage
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+```
+
+## 모니터링 및 리포트
+
+### 품질 메트릭 수집
+```javascript
+// scripts/generate-quality-report.js
+const fs = require('fs');
+const path = require('path');
+
+function countLines(filePath) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  return content.split('\n').length;
+}
+
+function generateReport() {
+  const srcDir = './src';
+  const files = [];
+  
+  function walkDir(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      
+      if (entry.isDirectory()) {
+        walkDir(fullPath);
+      } else if (entry.isFile() && /\.(ts|tsx|js|jsx)$/.test(entry.name)) {
+        const lineCount = countLines(fullPath);
+        files.push({
+          path: fullPath,
+          lines: lineCount,
+          size: fs.statSync(fullPath).size
+        });
+      }
+    }
+  }
+  
+  walkDir(srcDir);
+  
+  const report = {
+    timestamp: new Date().toISOString(),
+    totalFiles: files.length,
+    totalLines: files.reduce((sum, file) => sum + file.lines, 0),
+    averageLines: Math.round(files.reduce((sum, file) => sum + file.lines, 0) / files.length),
+    filesOverLimit: files.filter(file => file.lines > 400).length,
+    largestFiles: files
+      .sort((a, b) => b.lines - a.lines)
+      .slice(0, 10)
+      .map(file => ({
+        path: file.path,
+        lines: file.lines
+      }))
+  };
+  
+  fs.writeFileSync('./reports/quality-report.json', JSON.stringify(report, null, 2));
+  console.log('품질 리포트가 생성되었습니다: ./reports/quality-report.json');
+}
+
+generateReport();
+```
+
+이제 업데이트된 규칙들을 확인해보겠습니다.
+<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
+list_dir

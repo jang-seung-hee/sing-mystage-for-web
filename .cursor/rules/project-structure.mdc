@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+description: SingMystage 프로젝트의 전체 구조와 핵심 아키텍처 가이드
+---
+
+# SingMystage 프로젝트 구조 가이드
+
+## 프로젝트 개요
+**SingMystage**: YouTube 기반 노래방 웹 애플리케이션  
+**기술 스택**: React 19 + TypeScript + Firebase + YouTube API + Tailwind CSS  
+**배포**: Netlify (프론트엔드) + Firebase Functions (백엔드)
+
+## 핵심 디렉토리 구조
+- `src/components/`: 기능별 컴포넌트 분리 (Auth, Common, Favorites, Player, Search, SidePanel, User, VideoPanel)
+- `src/services/`: API 통신 및 비즈니스 로직 (Firebase, YouTube API)
+- `src/hooks/`: 커스텀 React 훅
+- `src/types/`: TypeScript 타입 정의
+- `src/pages/`: 페이지 컴포넌트
+- `functions/`: Firebase Functions (YouTube API 처리)
+
+## 핵심 파일 의존성
+- **Firebase 설정**: [firebase.ts](mdc:src/firebase.ts) ↔ [functions/index.js](mdc:functions/index.js) (한국 리전 연동)
+- **YouTube API**: [youtubeApi.ts](mdc:src/services/youtubeApi.ts) ↔ [functions/index.js](mdc:functions/index.js) (Functions 호출)
+- **메인 앱**: [App.tsx](mdc:src/App.tsx) ↔ [MainPage.tsx](mdc:src/pages/MainPage.tsx) (인증 기반 라우팅)
+
+## 코드 표준
+### 명명 규칙
+- **컴포넌트**: PascalCase (예: SearchContainer.tsx)
+- **훅**: camelCase with 'use' prefix (예: useAuth.ts)
+- **서비스**: camelCase with service suffix (예: youtubeApi.ts)
+- **타입**: PascalCase with interface/type prefix
+
+### 스타일링 규칙
+- **필수**: Tailwind CSS 클래스만 사용
+- **네온 효과**: text-neon-cyan, shadow-neon-cyan, animate-pulse-glow 사용
+- **다크 테마**: bg-dark-bg, bg-dark-card 클래스 활용
+- **반응형**: 모바일 우선 설계 (lg: 접두사 활용)
+
+## Firebase 연동 규칙
+- **필수**: 한국 리전 사용 (asia-northeast3)
+- **환경 변수**: 모든 Firebase 설정은 REACT_APP_FIREBASE_* 형식
+- **Functions 호출**: httpsCallable을 통한 안전한 호출
+- **에러 처리**: 한국어 에러 메시지 필수
+
+## YouTube API 처리 규칙
+- **필수**: Firebase Functions를 통한 간접 호출만 허용
+- **금지**: 클라이언트에서 직접 YouTube API 호출 금지
+- **스트림 URL**: getAdFreeStreamUrl 함수만 사용
+- **검색**: searchYouTube 함수만 사용
+
+## 컴포넌트 구조 규칙
+- **Lazy Loading**: 주요 패널은 React.lazy() 사용 필수
+- **State 관리**: 상태는 최상위 컴포넌트에서 관리
+- **Props 전달**: 명확한 타입 정의와 함께 props 전달
+- **에러 바운더리**: 각 주요 컴포넌트에 에러 처리 구현
+
+## 금지 사항
+### ❌ 절대 금지
+- 클라이언트에서 YouTube API 직접 호출
+- Firebase 환경 변수를 코드에 하드코딩
+- Tailwind를 무시한 인라인 스타일 사용
+- 컴포넌트 내부에서 직접 API 호출 (서비스 레이어 우회)
+
+### ❌ 구조적 금지
+- src/components/ 외부에 컴포넌트 파일 배치
+- Firebase Functions 없이 YouTube 기능 구현
+- TypeScript 타입 정의 생략
+- 반응형 설계 무시한 고정 크기 레이아웃
